@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大福面单打印 · 修复打印尺寸</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0ABAB5 0%, #008E9B 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            min-height: 90vh;
+        }
+
+        .header {
+            background: white;
+            color: #333;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1e6ed;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-image {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0ABAB5;
+            margin-bottom: 2px;
+        }
+
+        .logo .subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .nav-tab.active {
+            background: #0ABAB5;
+            color: white;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #0ABAB5;
+            border-radius: 2px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .required::after {
+            content: '*';
+            color: #ff4757;
+            margin-left: 4px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #0ABAB5;
+            box-shadow: 0 0 0 3px rgba(10, 186, 181, 0.1);
+        }
+
+        input.error {
+            border-color: #ff4757;
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            border: 2px solid #e1e6ed;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .quantity-btn {
+            width: 44px;
+            height: 48px;
+            background: #f8f9fa;
+            border: none;
+            font-size: 22px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            color: #0ABAB5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn:hover {
+            background: #e9ecef;
+        }
+
+        .quantity-btn:active {
+            background: #d0d5dc;
+        }
+
+        .quantity-input {
+            flex: 1;
+            border: none;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 12px 0;
+            background: white;
+            min-width: 50px;
+            color: #1e2b3c;
+        }
+
+        .quantity-input:focus {
+            outline: none;
+            box-shadow: inset 0 0 0 2px #0ABAB5;
+            border-radius: 0;
+        }
+
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .quantity-input {
+            -moz-appearance: textfield;
+        }
+
+        .preview-section {
+            background: white;
+            border: 2px dashed #e1e6ed;
+            border-radius: 10px;
+            padding: 25px;
+            position: sticky;
+            top: 30px;
+        }
+
+        .preview-container {
+            background: white;
+            border: 1px solid #e1e6ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 500px;
+        }
+
+        /* ===== 预览标签样式 ===== */
+        .label-preview {
+            width: 300px;
+            height: 450px;
+            background: white;
+            border: 2px solid #333;
+            padding: 22px;
+            position: relative;
+            font-family: Arial, sans-serif;
+            aspect-ratio: 1/1.5;
+        }
+
+        .preview-logo1 {
+            position: absolute;
+            top: 22px;
+            left: 22px;
+            height: 38px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .preview-logo1-text {
+            position: absolute;
+            top: 22px;
+            left: 22px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #0ABAB5;
+            display: none;
+        }
+
+        .preview-qrcode {
+            position: absolute;
+            top: 22px;
+            right: 22px;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            color: #666;
+        }
+
+        .preview-qrcode img {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .preview-content {
+            margin-top: 105px;
+        }
+
+        .preview-order {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .preview-divider {
+            border-top: 3px dashed #ccc;
+            margin: 15px 0;
+        }
+
+        .preview-field {
+            font-size: 18px;
+            margin: 9px 0;
+            color: #333;
+        }
+
+        .preview-field.bold {
+            font-weight: bold;
+        }
+
+        .preview-unit {
+            position: absolute;
+            bottom: 12px;
+            right: 30px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #222;
+            opacity: 0.7;
+        }
+
+        .preview-page-indicator {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 52px;
+            font-weight: bold;
+            color: #1a1a1a;
+            opacity: 0.9;
+            letter-spacing: 2px;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 0 14px;
+            border-radius: 6px;
+            text-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .page-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 12px;
+        }
+
+        .page-nav button {
+            padding: 6px 16px;
+            border: 1px solid #0ABAB5;
+            background: white;
+            color: #0ABAB5;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .page-nav button:hover {
+            background: #0ABAB5;
+            color: white;
+        }
+
+        .page-nav button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #f0f0f0;
+            color: #999;
+            border-color: #ccc;
+        }
+
+        .page-nav span {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #0ABAB5;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #008E9B;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .history-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            grid-column: 1 / -1;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .history-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #0ABAB5;
+        }
+
+        .history-order {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .history-customer {
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .history-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #999;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .management-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            grid-column: 1 / -1;
+        }
+
+        .management-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e1e6ed;
+        }
+
+        .management-tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+            border: 1px solid #e1e6ed;
+            border-bottom: none;
+        }
+
+        .management-tab.active {
+            background: #0ABAB5;
+            color: white;
+        }
+
+        .management-content {
+            display: none;
+        }
+
+        .management-content.active {
+            display: block;
+        }
+
+        .add-person-form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .person-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .person-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e1e6ed;
+        }
+
+        .person-item:last-child {
+            border-bottom: none;
+        }
+
+        .person-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff3742;
+        }
+
+        .login-form {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 50px auto;
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .login-input-group {
+            margin-bottom: 20px;
+        }
+
+        .login-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #0ABAB5;
+            box-shadow: 0 0 0 3px rgba(10, 186, 181, 0.1);
+        }
+
+        .login-error {
+            color: #ff4757;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: #0ABAB5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: #008E9B;
+            transform: translateY(-2px);
+        }
+
+        .login-note {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .print-progress {
+            background: #f0f9f9;
+            border: 1px solid #0ABAB5;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #0ABAB5;
+            text-align: center;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .logo {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .logo-image {
+                height: 40px;
+            }
+            .logo h1 {
+                font-size: 18px;
+            }
+            .logo .subtitle {
+                font-size: 11px;
+            }
+            .label-preview {
+                width: 240px;
+                height: 360px;
+            }
+            .preview-logo1 {
+                height: 35px;
+            }
+            .preview-content {
+                margin-top: 85px;
+            }
+            .preview-order {
+                font-size: 28px;
+            }
+            .preview-unit {
+                font-size: 24px;
+                bottom: 8px;
+                right: 20px;
+            }
+            .preview-page-indicator {
+                font-size: 42px;
+                bottom: 8px;
+                padding: 0 10px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* ===== 打印样式 - 与预览完全一致的比例 ===== */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            .label-preview,
+            .label-preview * {
+                visibility: visible;
+            }
+
+            /* 标签使用固定物理尺寸 100mm x 150mm */
+            .label-preview {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100mm;
+                height: 150mm;
+                border: 2px solid #000;
+                padding: 7.3mm 7.3mm;
+                font-family: Arial, sans-serif;
+                box-sizing: border-box;
+                background: white;
+                margin: 0;
+                page-break-after: always;
+                overflow: hidden;
+            }
+
+            /* === 所有尺寸统一使用 mm 单位，与预览成比例 === */
+            /* 预览比例: 300px/450px = 1/1.5，打印 100mm/150mm = 1/1.5 */
+            /* 预览 padding 22px → 打印 7.3mm (22/300*100) */
+            
+            .preview-logo1 {
+                position: absolute;
+                top: 7.3mm;
+                left: 7.3mm;
+                height: 12.7mm;
+                width: auto;
+                object-fit: contain;
+            }
+
+            .preview-logo1-text {
+                position: absolute;
+                top: 7.3mm;
+                left: 7.3mm;
+                font-size: 7.3mm;
+                font-weight: bold;
+                color: #0ABAB5;
+                display: none;
+            }
+
+            .preview-qrcode {
+                position: absolute;
+                top: 7.3mm;
+                right: 7.3mm;
+                width: 30mm;
+                height: 30mm;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .preview-qrcode img {
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+            .preview-content {
+                margin-top: 35mm;
+            }
+
+            .preview-order {
+                font-size: 12mm;
+                font-weight: bold;
+                margin-bottom: 5mm;
+                line-height: 1.2;
+            }
+
+            .preview-divider {
+                border-top: 1mm dashed #999;
+                margin: 4mm 0;
+            }
+
+            .preview-field {
+                font-size: 6mm;
+                margin: 2.5mm 0;
+                line-height: 1.3;
+            }
+
+            .preview-field.bold {
+                font-weight: bold;
+            }
+
+            .preview-unit {
+                position: absolute;
+                bottom: 7.3mm;
+                right: 7.3mm;
+                font-size: 10.7mm;
+                font-weight: bold;
+                opacity: 0.7;
+            }
+
+            .preview-page-indicator {
+                position: absolute;
+                bottom: 7.3mm;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 17.3mm;
+                font-weight: bold;
+                opacity: 0.9;
+                padding: 0 3mm;
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 2mm;
+                letter-spacing: 0.5mm;
+                text-shadow: 0 0 2mm rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 头部导航 -->
+        <div class="header">
+            <div class="logo">
+                <img src="images/form-logonova.png" alt="dafu pano Logo" class="logo-image">
+                <div class="logo-text">
+                    <h1>面单打印小程序</h1>
+                    <div class="subtitle">DAFU Label Printing System</div>
+                </div>
+            </div>
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="switchTab('create')">ETIQUETA</div>
+                <div class="nav-tab" onclick="switchTab('history')">História</div>
+                <div class="nav-tab" onclick="switchTab('management')">人员管理</div>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="main-content">
+            <!-- 左侧表单 -->
+            <div class="form-section">
+                <div class="section-title">Informação（订单信息）</div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="required">Nro.Pedido (订单号)</label>
+                        <input type="text" id="orderNo" placeholder="Digite Número do pedido" maxlength="8">
+                        <div class="error-message" id="orderNoError">Pedido deve conter exatamente 8 dígitos</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Nome Cliente (客户名称)</label>
+                        <input type="text" id="customer" placeholder="Digite Nome Cliente">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Vendedor (销售员)</label>
+                        <select id="staff">
+                            <option value="">Escolher(选择）</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Empacotador (包装员)</label>
+                        <select id="packer">
+                            <option value="">Escolher(选择）</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Quantidade (数量)</label>
+                        <div class="quantity-control">
+                            <button type="button" class="quantity-btn" onclick="changeQuantity(-1)">−</button>
+                            <input type="number" id="quantity" class="quantity-input" value="1" min="1" step="1">
+                            <button type="button" class="quantity-btn" onclick="changeQuantity(1)">+</button>
+                        </div>
+                        <div style="font-size:13px; color:#888; margin-top:6px; text-align:right;">当前数量: <span id="quantityDisplay">1</span></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Unidade (单位)</label>
+                        <select id="unit">
+                            <option value="">Escolher(选择）</option>
+                            <option value="CX">CAIXA (箱)</option>
+                            <option value="SC">SACOLA (袋)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Peso kg (重量)</label>
+                        <input type="number" id="weight" placeholder="Digite Peso kg" step="5">
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="generateLabel()" id="generateBtn">Gerar (生成)</button>
+                    <button class="btn btn-secondary" onclick="resetForm()">Aturizar (重置)</button>
+                </div>
+            </div>
+
+            <!-- 右侧预览 -->
+            <div class="preview-section">
+                <div class="section-title">Pré-visualização(预览)</div>
+                <div class="preview-container">
+                    <div class="label-preview">
+                        <div class="preview-logo1-container">
+                            <img src="images/preview-logo1.png" alt="DAFU Logo" class="preview-logo1" onerror="showLogoText()">
+                            <div class="preview-logo1-text">DAFU ETIQUETA</div>
+                        </div>
+                        <div class="preview-qrcode" id="qrcodeContainer"></div>
+                        <div class="preview-content">
+                            <div class="preview-order">№: <span id="previewOrderNo">________</span></div>
+                            <div class="preview-divider"></div>
+                            <div class="preview-field bold">Cliente: <span id="previewCustomer">________</span></div>
+                            <div class="preview-field bold">Vendedora: <span id="previewStaff">________</span></div>
+                            <div class="preview-field">Empacotador: <span id="previewPacker">________</span></div>
+                            <div class="preview-field">Data: <span id="previewDate"></span></div>
+                            <div class="preview-field">Peso: <span id="previewWeight">__</span>kg</div>
+                            <div class="preview-divider"></div>
+                        </div>
+                        <div class="preview-unit" id="previewUnit"></div>
+                        <div class="preview-page-indicator" id="previewPageIndicator">1/1</div>
+                    </div>
+                </div>
+
+                <div class="page-nav">
+                    <button onclick="changePage(-1)" id="prevPageBtn">◀ 上一页</button>
+                    <span id="pageInfo">1 / 10</span>
+                    <button onclick="changePage(1)" id="nextPageBtn">下一页 ▶</button>
+                </div>
+
+                <div class="print-progress" id="printProgress">正在准备打印...</div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="printAllLabels()" id="printBtn" disabled>Imprimir (打印全部)</button>
+                    <button class="btn btn-secondary" onclick="saveLabel()">Salvar(保存)</button>
+                </div>
+            </div>
+
+            <!-- 历史记录 -->
+            <div class="history-section" id="historySection" style="display: none;">
+                <div class="history-header">
+                    <div class="section-title">历史记录</div>
+                    <button class="btn btn-secondary" onclick="clearHistory()">清空记录</button>
+                </div>
+                <div class="history-grid" id="historyGrid"></div>
+            </div>
+
+            <!-- 人员管理 -->
+            <div class="management-section" id="managementSection" style="display: none;">
+                <div class="login-form" id="loginForm">
+                    <div class="login-title">管理员登录</div>
+                    <div class="login-input-group">
+                        <label class="login-label">用户名</label>
+                        <input type="text" id="adminUsername" class="login-input" placeholder="请输入用户名">
+                    </div>
+                    <div class="login-input-group">
+                        <label class="login-label">密码</label>
+                        <input type="password" id="adminPassword" class="login-input" placeholder="请输入密码">
+                        <div class="login-error" id="loginError">用户名或密码错误</div>
+                    </div>
+                    <button class="login-btn" onclick="adminLogin()">登录</button>
+                    <div class="login-note">联系管理员</div>
+                </div>
+
+                <div id="managementContent" style="display: none;">
+                    <div class="section-title">人员管理</div>
+                    <div class="management-tabs">
+                        <div class="management-tab active" onclick="switchManagementTab('staff')">销售员管理</div>
+                        <div class="management-tab" onclick="switchManagementTab('packer')">包装员管理</div>
+                    </div>
+                    <div class="management-content active" id="staffManagement">
+                        <div class="add-person-form">
+                            <input type="text" id="newStaffName" placeholder="输入新销售员姓名" class="person-input">
+                            <button class="btn btn-primary" onclick="addStaff()">添加销售员</button>
+                        </div>
+                        <div class="person-list" id="staffList"></div>
+                    </div>
+                    <div class="management-content" id="packerManagement">
+                        <div class="add-person-form">
+                            <input type="text" id="newPackerName" placeholder="输入新包装员姓名" class="person-input">
+                            <button class="btn btn-primary" onclick="addPacker()">添加包装员</button>
+                        </div>
+                        <div class="person-list" id="packerList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======================== 全局数据 ========================
+        const appData = {
+            labelHistory: JSON.parse(localStorage.getItem('labelHistory')) || [],
+            staffList: JSON.parse(localStorage.getItem('staffList')) || ['DAFU'],
+            packerList: JSON.parse(localStorage.getItem('packerList')) || ['DAFU'],
+            adminCredentials: { username: 'admin', password: 'admin' },
+            isAdminLoggedIn: false,
+            currentQRCodeDataURL: null,
+            currentPage: 1,
+            totalPages: 1,
+            qrCodeCache: {}
+        };
+
+        // ======================== 初始化 ========================
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            updatePreviewDate();
+            loadStaffOptions();
+            loadPackerOptions();
+            syncQuantityDisplay();
+            updateTotalPages();
+            updatePageIndicator();
+            updateNavButtons();
+        });
+
+        function initApp() {
+            document.getElementById('orderNo').addEventListener('input', validateOrderNo);
+            document.getElementById('customer').addEventListener('input', validateForm);
+            document.getElementById('staff').addEventListener('change', validateForm);
+            document.getElementById('packer').addEventListener('change', validateForm);
+            document.getElementById('quantity').addEventListener('input', function() {
+                validateForm();
+                syncQuantityDisplay();
+                updateTotalPages();
+                updatePageIndicator();
+                updateNavButtons();
+            });
+            document.getElementById('unit').addEventListener('change', validateForm);
+            document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') adminLogin();
+            });
+            loadHistory();
+            updateTotalPages();
+        }
+
+        function updateTotalPages() {
+            const qty = parseInt(document.getElementById('quantity').value) || 1;
+            appData.totalPages = Math.max(1, qty);
+            if (appData.currentPage > appData.totalPages) {
+                appData.currentPage = appData.totalPages;
+            }
+            updatePageIndicator();
+            updateNavButtons();
+        }
+
+        function updatePageIndicator() {
+            const indicator = document.getElementById('previewPageIndicator');
+            const pageInfo = document.getElementById('pageInfo');
+            if (indicator) {
+                indicator.textContent = `${appData.currentPage}/${appData.totalPages}`;
+            }
+            if (pageInfo) {
+                pageInfo.textContent = `${appData.currentPage} / ${appData.totalPages}`;
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevPageBtn').disabled = appData.currentPage <= 1;
+            document.getElementById('nextPageBtn').disabled = appData.currentPage >= appData.totalPages;
+        }
+
+        function changePage(delta) {
+            const newPage = appData.currentPage + delta;
+            if (newPage < 1 || newPage > appData.totalPages) return;
+            appData.currentPage = newPage;
+            updatePageIndicator();
+            updateNavButtons();
+            showNotification(`第 ${appData.currentPage} 页 / 共 ${appData.totalPages} 页`, 'info');
+        }
+
+        function syncQuantityDisplay() {
+            const qtyInput = document.getElementById('quantity');
+            let val = parseInt(qtyInput.value) || 1;
+            if (val < 1) val = 1;
+            qtyInput.value = val;
+            document.getElementById('quantityDisplay').textContent = val;
+            updateTotalPages();
+        }
+
+        function showLogoText() {
+            const logoImg = document.querySelector('.preview-logo1');
+            const logoText = document.querySelector('.preview-logo1-text');
+            if (logoImg) logoImg.style.display = 'none';
+            if (logoText) logoText.style.display = 'block';
+        }
+
+        // ======================== 管理员 ========================
+        function adminLogin() {
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const loginError = document.getElementById('loginError');
+            if (username === appData.adminCredentials.username && password === appData.adminCredentials.password) {
+                appData.isAdminLoggedIn = true;
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('managementContent').style.display = 'block';
+                renderStaffList();
+                renderPackerList();
+                showNotification('管理员登录成功', 'success');
+            } else {
+                loginError.style.display = 'block';
+                document.getElementById('adminPassword').value = '';
+                setTimeout(() => { loginError.style.display = 'none'; }, 3000);
+            }
+        }
+
+        function checkAdminPermission() {
+            if (!appData.isAdminLoggedIn) {
+                showNotification('请先登录管理员账号', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        // ======================== 人员管理 ========================
+        function loadStaffOptions() {
+            const select = document.getElementById('staff');
+            select.innerHTML = '<option value="">Escolher(选择）</option>';
+            appData.staffList.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                select.appendChild(opt);
+            });
+        }
+
+        function loadPackerOptions() {
+            const select = document.getElementById('packer');
+            select.innerHTML = '<option value="">Escolher(选择）</option>';
+            appData.packerList.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderStaffList() {
+            const container = document.getElementById('staffList');
+            container.innerHTML = '';
+            if (appData.staffList.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">暂无销售员</div>';
+                return;
+            }
+            appData.staffList.forEach((name, idx) => {
+                const div = document.createElement('div');
+                div.className = 'person-item';
+                div.innerHTML =
+                    `<span>${name}</span><div class="person-actions"><button class="btn btn-small btn-danger" onclick="deleteStaff(${idx})">删除</button></div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function renderPackerList() {
+            const container = document.getElementById('packerList');
+            container.innerHTML = '';
+            if (appData.packerList.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">暂无包装员</div>';
+                return;
+            }
+            appData.packerList.forEach((name, idx) => {
+                const div = document.createElement('div');
+                div.className = 'person-item';
+                div.innerHTML =
+                    `<span>${name}</span><div class="person-actions"><button class="btn btn-small btn-danger" onclick="deletePacker(${idx})">删除</button></div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function addStaff() {
+            if (!checkAdminPermission()) return;
+            const name = document.getElementById('newStaffName').value.trim();
+            if (!name) { showNotification('请输入销售员姓名', 'error'); return; }
+            if (appData.staffList.includes(name)) { showNotification('该销售员已存在', 'error'); return; }
+            appData.staffList.push(name);
+            localStorage.setItem('staffList', JSON.stringify(appData.staffList));
+            document.getElementById('newStaffName').value = '';
+            loadStaffOptions();
+            renderStaffList();
+            showNotification('销售员添加成功', 'success');
+        }
+
+        function deleteStaff(index) {
+            if (!checkAdminPermission()) return;
+            if (confirm('确定删除？')) {
+                appData.staffList.splice(index, 1);
+                localStorage.setItem('staffList', JSON.stringify(appData.staffList));
+                loadStaffOptions();
+                renderStaffList();
+                showNotification('已删除', 'success');
+            }
+        }
+
+        function addPacker() {
+            if (!checkAdminPermission()) return;
+            const name = document.getElementById('newPackerName').value.trim();
+            if (!name) { showNotification('请输入包装员姓名', 'error'); return; }
+            if (appData.packerList.includes(name)) { showNotification('该包装员已存在', 'error'); return; }
+            appData.packerList.push(name);
+            localStorage.setItem('packerList', JSON.stringify(appData.packerList));
+            document.getElementById('newPackerName').value = '';
+            loadPackerOptions();
+            renderPackerList();
+            showNotification('包装员添加成功', 'success');
+        }
+
+        function deletePacker(index) {
+            if (!checkAdminPermission()) return;
+            if (confirm('确定删除？')) {
+                appData.packerList.splice(index, 1);
+                localStorage.setItem('packerList', JSON.stringify(appData.packerList));
+                loadPackerOptions();
+                renderPackerList();
+                showNotification('已删除', 'success');
+            }
+        }
+
+        function switchManagementTab(tabName) {
+            if (!checkAdminPermission()) return;
+            document.querySelectorAll('.management-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.management-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabName + 'Management').classList.add('active');
+        }
+
+        // ======================== 表单验证 ========================
+        function validateOrderNo() {
+            const input = document.getElementById('orderNo');
+            const err = document.getElementById('orderNoError');
+            const val = input.value.replace(/[^0-9]/g, '');
+            input.value = val;
+            if (val.length > 0 && val.length !== 8) {
+                input.classList.add('error');
+                err.style.display = 'block';
+            } else {
+                input.classList.remove('error');
+                err.style.display = 'none';
+            }
+            validateForm();
+        }
+
+        function validateForm() {
+            const orderNo = document.getElementById('orderNo').value;
+            const customer = document.getElementById('customer').value;
+            const staff = document.getElementById('staff').value;
+            const packer = document.getElementById('packer').value;
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const unit = document.getElementById('unit').value;
+            const valid = orderNo.length === 8 && customer && staff && packer && quantity > 0 && unit;
+            document.getElementById('generateBtn').disabled = !valid;
+            return valid;
+        }
+
+        // ======================== 数量控制 ========================
+        function changeQuantity(delta) {
+            const input = document.getElementById('quantity');
+            let val = parseInt(input.value) || 1;
+            val = Math.max(1, val + delta);
+            input.value = val;
+            syncQuantityDisplay();
+            validateForm();
+            updateTotalPages();
+            updatePageIndicator();
+            updateNavButtons();
+        }
+
+        // ======================== 日期 ========================
+        function updatePreviewDate() {
+            const now = new Date();
+            const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('previewDate').textContent = `${day} ${month} ${year} ${hours}:${minutes}`;
+        }
+
+        // ======================== 生成标签 ========================
+        function generateLabel() {
+            if (!validateForm()) {
+                alert('请填写完整的必填信息');
+                return;
+            }
+            appData.currentPage = 1;
+            updateTotalPages();
+            updatePageIndicator();
+            updateNavButtons();
+            updatePreview();
+            generateAllQRCodes();
+            document.getElementById('printBtn').disabled = false;
+            showNotification(`标签生成成功！共 ${appData.totalPages} 页`, 'success');
+        }
+
+        function generateAllQRCodes() {
+            const orderNo = document.getElementById('orderNo').value;
+            const total = appData.totalPages;
+            appData.qrCodeCache = {};
+
+            for (let i = 1; i <= total; i++) {
+                const canvas = document.createElement('canvas');
+                QRCode.toCanvas(canvas, orderNo, {
+                    width: 80,
+                    margin: 1,
+                    color: { dark: '#000000', light: '#ffffff' }
+                }, function(error) {
+                    if (!error) {
+                        appData.qrCodeCache[i] = canvas.toDataURL('image/png');
+                    } else {
+                        appData.qrCodeCache[i] = null;
+                    }
+                });
+            }
+
+            const container = document.getElementById('qrcodeContainer');
+            container.innerHTML = '';
+            QRCode.toCanvas(orderNo, { width: 80, margin: 1, color: { dark: '#000000', light: '#ffffff' } },
+                function(error, canvas) {
+                    if (error) {
+                        container.innerHTML = '<div style="text-align:center;color:#666;">QR Code</div>';
+                    } else {
+                        const dataURL = canvas.toDataURL('image/png');
+                        appData.currentQRCodeDataURL = dataURL;
+                        const img = document.createElement('img');
+                        img.src = dataURL;
+                        img.alt = 'QR Code';
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        container.appendChild(img);
+                    }
+                });
+
+            setTimeout(() => {
+                for (let i = 1; i <= total; i++) {
+                    if (!appData.qrCodeCache[i]) {
+                        appData.qrCodeCache[i] = appData.currentQRCodeDataURL;
+                    }
+                }
+            }, 500);
+        }
+
+        function updatePreview() {
+            document.getElementById('previewOrderNo').textContent = document.getElementById('orderNo').value;
+            document.getElementById('previewCustomer').textContent = document.getElementById('customer').value;
+            document.getElementById('previewStaff').textContent = document.getElementById('staff').value;
+            document.getElementById('previewPacker').textContent = document.getElementById('packer').value;
+            document.getElementById('previewWeight').textContent = document.getElementById('weight').value || '__';
+            document.getElementById('previewUnit').textContent = document.getElementById('unit').value;
+            updatePreviewDate();
+            syncQuantityDisplay();
+            updateTotalPages();
+            updatePageIndicator();
+            updateNavButtons();
+        }
+
+        // ======================== 批量打印 ========================
+        function printAllLabels() {
+            if (!validateForm()) {
+                alert('请先生成有效的标签');
+                return;
+            }
+
+            const total = appData.totalPages;
+            const progressDiv = document.getElementById('printProgress');
+            progressDiv.style.display = 'block';
+            progressDiv.textContent = `正在准备打印 ${total} 张标签...`;
+
+            const orderNo = document.getElementById('orderNo').value;
+            const customer = document.getElementById('customer').value;
+            const staff = document.getElementById('staff').value;
+            const packer = document.getElementById('packer').value;
+            const weight = document.getElementById('weight').value || '__';
+            const unit = document.getElementById('unit').value;
+            const dateStr = document.getElementById('previewDate').textContent;
+
+            const labelsHTML = [];
+            for (let page = 1; page <= total; page++) {
+                const qrData = appData.qrCodeCache[page] || appData.currentQRCodeDataURL || '';
+                labelsHTML.push(`
+                    <div class="label-preview">
+                        <div class="preview-logo1-container">
+                            <img src="images/preview-logo1.png" alt="DAFU Logo" class="preview-logo1" onerror="this.style.display='none'; this.parentElement.querySelector('.preview-logo1-text').style.display='block'">
+                            <div class="preview-logo1-text" style="display:none;">DAFU ETIQUETA</div>
+                        </div>
+                        <div class="preview-qrcode">
+                            <img src="${qrData}" alt="QR Code">
+                        </div>
+                        <div class="preview-content">
+                            <div class="preview-order">№: ${orderNo}</div>
+                            <div class="preview-divider"></div>
+                            <div class="preview-field bold">Cliente: ${customer}</div>
+                            <div class="preview-field bold">Vendedora: ${staff}</div>
+                            <div class="preview-field">Empacotador: ${packer}</div>
+                            <div class="preview-field">Data: ${dateStr}</div>
+                            <div class="preview-field">Peso: ${weight}kg</div>
+                            <div class="preview-divider"></div>
+                        </div>
+                        <div class="preview-unit">${unit}</div>
+                        <div class="preview-page-indicator">${page}/${total}</div>
+                    </div>
+                `);
+            }
+
+            const printWindow = window.open('', '_blank', 'width=800,height=600');
+            if (!printWindow) {
+                alert('请允许弹出窗口，以便打印');
+                progressDiv.style.display = 'none';
+                return;
+            }
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>打印标签 - 共 ${total} 张</title>
+                    <style>
+                        /* 重置样式 */
+                        * { margin:0; padding:0; box-sizing:border-box; }
+                        body { 
+                            background: #f0f0f0; 
+                            padding: 10px; 
+                            font-family: Arial, sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                        }
+                        
+                        /* 打印页面设置 */
+                        @page { 
+                            margin: 0; 
+                            size: 100mm 150mm; 
+                        }
+                        
+                        /* 标签样式 - 与主样式中的 @media print 完全一致 */
+                        .label-preview {
+                            width: 100mm;
+                            height: 150mm;
+                            border: 2px solid #000;
+                            padding: 7.3mm 7.3mm;
+                            position: relative;
+                            font-family: Arial, sans-serif;
+                            box-sizing: border-box;
+                            background: white;
+                            margin: 0 auto 10px auto;
+                            page-break-after: always;
+                            overflow: hidden;
+                        }
+                        
+                        .preview-logo1 {
+                            position: absolute;
+                            top: 7.3mm;
+                            left: 7.3mm;
+                            height: 12.7mm;
+                            width: auto;
+                            object-fit: contain;
+                        }
+                        
+                        .preview-logo1-text {
+                            position: absolute;
+                            top: 7.3mm;
+                            left: 7.3mm;
+                            font-size: 7.3mm;
+                            font-weight: bold;
+                            color: #0ABAB5;
+                            display: none;
+                        }
+                        
+                        .preview-qrcode {
+                            position: absolute;
+                            top: 7.3mm;
+                            right: 7.3mm;
+                            width: 30mm;
+                            height: 30mm;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        
+                        .preview-qrcode img {
+                            width: 100% !important;
+                            height: 100% !important;
+                        }
+                        
+                        .preview-content {
+                            margin-top: 35mm;
+                        }
+                        
+                        .preview-order {
+                            font-size: 12mm;
+                            font-weight: bold;
+                            margin-bottom: 5mm;
+                            line-height: 1.2;
+                        }
+                        
+                        .preview-divider {
+                            border-top: 1mm dashed #999;
+                            margin: 4mm 0;
+                        }
+                        
+                        .preview-field {
+                            font-size: 6mm;
+                            margin: 2.5mm 0;
+                            line-height: 1.3;
+                        }
+                        
+                        .preview-field.bold {
+                            font-weight: bold;
+                        }
+                        
+                        .preview-unit {
+                            position: absolute;
+                            bottom: 7.3mm;
+                            right: 7.3mm;
+                            font-size: 10.7mm;
+                            font-weight: bold;
+                            opacity: 0.7;
+                        }
+                        
+                        .preview-page-indicator {
+                            position: absolute;
+                            bottom: 7.3mm;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            font-size: 17.3mm;
+                            font-weight: bold;
+                            opacity: 0.9;
+                            padding: 0 3mm;
+                            background: rgba(255, 255, 255, 0.3);
+                            border-radius: 2mm;
+                            letter-spacing: 0.5mm;
+                            text-shadow: 0 0 2mm rgba(255, 255, 255, 0.3);
+                        }
+                        
+                        .print-header {
+                            font-size: 16px;
+                            color: #666;
+                            margin-bottom: 15px;
+                            padding: 8px 16px;
+                            background: #e9ecef;
+                            border-radius: 8px;
+                        }
+                        
+                        @media print {
+                            body { 
+                                background: white; 
+                                padding: 0; 
+                                margin: 0;
+                            }
+                            .print-header { 
+                                display: none; 
+                            }
+                            .label-preview { 
+                                margin: 0 auto; 
+                                page-break-after: always; 
+                                border: 2px solid #000;
+                                box-shadow: none;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-header">📄 共 ${total} 张标签 (${orderNo})</div>
+                    ${labelsHTML.join('')}
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                            }, 600);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+
+            progressDiv.textContent = `✅ 已发送 ${total} 张标签到打印机！`;
+            setTimeout(() => { progressDiv.style.display = 'none'; }, 4000);
+
+            saveToHistory();
+            showNotification(`已发送 ${total} 张标签到打印机！`, 'success');
+        }
+
+        // ======================== 保存 ========================
+        function saveToHistory() {
+            const labelData = {
+                id: Date.now(),
+                orderNo: document.getElementById('orderNo').value,
+                customer: document.getElementById('customer').value,
+                staff: document.getElementById('staff').value,
+                packer: document.getElementById('packer').value,
+                quantity: document.getElementById('quantity').value,
+                unit: document.getElementById('unit').value,
+                weight: document.getElementById('weight').value,
+                createTime: new Date().toLocaleString('zh-CN'),
+                printed: true,
+                totalPages: appData.totalPages
+            };
+            appData.labelHistory.unshift(labelData);
+            localStorage.setItem('labelHistory', JSON.stringify(appData.labelHistory));
+        }
+
+        function saveLabel() {
+            if (!validateForm()) { alert('请先生成有效的标签'); return; }
+            saveToHistory();
+            showNotification('标签已保存到历史记录！', 'success');
+        }
+
+        function resetForm() {
+            document.getElementById('orderNo').value = '';
+            document.getElementById('customer').value = '';
+            document.getElementById('staff').selectedIndex = 0;
+            document.getElementById('packer').selectedIndex = 0;
+            document.getElementById('quantity').value = '1';
+            document.getElementById('unit').selectedIndex = 0;
+            document.getElementById('weight').value = '';
+            document.getElementById('printBtn').disabled = true;
+            document.getElementById('previewOrderNo').textContent = '________';
+            document.getElementById('previewCustomer').textContent = '________';
+            document.getElementById('previewStaff').textContent = '________';
+            document.getElementById('previewPacker').textContent = '________';
+            document.getElementById('previewWeight').textContent = '__';
+            document.getElementById('previewUnit').textContent = '';
+            document.getElementById('qrcodeContainer').innerHTML = '';
+            appData.currentQRCodeDataURL = null;
+            appData.qrCodeCache = {};
+            appData.currentPage = 1;
+            updateTotalPages();
+            updatePageIndicator();
+            updateNavButtons();
+            syncQuantityDisplay();
+            document.getElementById('printProgress').style.display = 'none';
+            showNotification('Atualizado', 'info');
+        }
+
+        // ======================== 切换标签页 ========================
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelector('.preview-section').style.display = 'none';
+            document.getElementById('historySection').style.display = 'none';
+            document.getElementById('managementSection').style.display = 'none';
+
+            if (tabName === 'history') {
+                document.getElementById('historySection').style.display = 'block';
+                loadHistory();
+            } else if (tabName === 'management') {
+                document.getElementById('managementSection').style.display = 'block';
+                appData.isAdminLoggedIn = false;
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('managementContent').style.display = 'none';
+                document.getElementById('adminUsername').value = '';
+                document.getElementById('adminPassword').value = '';
+            } else {
+                document.querySelector('.preview-section').style.display = 'block';
+                document.getElementById('historySection').style.display = 'none';
+            }
+        }
+
+        // ======================== 历史记录 ========================
+        function loadHistory() {
+            const grid = document.getElementById('historyGrid');
+            const history = appData.labelHistory;
+            if (history.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#666;">暂无历史记录</div>';
+                return;
+            }
+            grid.innerHTML = history.map(item => `
+                <div class="history-card fade-in">
+                    <div class="history-order">订单: ${item.orderNo}</div>
+                    <div class="history-customer">客户: ${item.customer}</div>
+                    <div class="history-customer">销售员: ${item.staff}</div>
+                    <div class="history-customer">包装员: ${item.packer}</div>
+                    <div class="history-meta"><span>${item.quantity} ${item.unit}</span><span>${item.createTime}</span></div>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            if (confirm('确定要清空所有历史记录吗？')) {
+                appData.labelHistory = [];
+                localStorage.setItem('labelHistory', JSON.stringify([]));
+                loadHistory();
+                showNotification('历史记录已清空', 'info');
+            }
+        }
+
+        // ======================== 通知 ========================
+        function showNotification(message, type = 'info') {
+            const notif = document.createElement('div');
+            const bgColor = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#0ABAB5';
+            notif.style.cssText = `
+                position:fixed; top:20px; right:20px; background:${bgColor}; color:white;
+                padding:15px 20px; border-radius:5px; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+                z-index:1000; animation:slideIn 0.3s ease;
+            `;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => document.body.removeChild(notif), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
