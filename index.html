@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大福面单打印 · 桃红配套</title>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js">
+    <title>大福面单打印 · 修复打印尺寸</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script>
+        // CDN 兜底：jsdelivr 失败时切换 unpkg
+        if (typeof QRCode === 'undefined') {
+            document.write('<script src="https://unpkg.com/qrcode@1.5.1/build/qrcode.min.js"><\/script>');
+        }
     </script>
     <style>
         * {
@@ -15,7 +20,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+            background: linear-gradient(135deg, #0ABAB5 0%, #008E9B 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -60,7 +65,7 @@
         .logo h1 {
             font-size: 20px;
             font-weight: 600;
-            color: #D63384;
+            color: #0ABAB5;
             margin-bottom: 2px;
         }
 
@@ -84,7 +89,7 @@
         }
 
         .nav-tab.active {
-            background: #D63384;
+            background: #0ABAB5;
             color: white;
         }
 
@@ -116,7 +121,7 @@
             content: '';
             width: 4px;
             height: 20px;
-            background: #D63384;
+            background: #0ABAB5;
             border-radius: 2px;
         }
 
@@ -157,8 +162,8 @@
         input:focus,
         select:focus {
             outline: none;
-            border-color: #D63384;
-            box-shadow: 0 0 0 3px rgba(214, 51, 132, 0.15);
+            border-color: #0ABAB5;
+            box-shadow: 0 0 0 3px rgba(10, 186, 181, 0.1);
         }
 
         input.error {
@@ -190,18 +195,18 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.2s ease;
-            color: #D63384;
+            color: #0ABAB5;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .quantity-btn:hover {
-            background: #fce4ec;
+            background: #e9ecef;
         }
 
         .quantity-btn:active {
-            background: #f8bbd0;
+            background: #d0d5dc;
         }
 
         .quantity-input {
@@ -218,7 +223,7 @@
 
         .quantity-input:focus {
             outline: none;
-            box-shadow: inset 0 0 0 2px #D63384;
+            box-shadow: inset 0 0 0 2px #0ABAB5;
             border-radius: 0;
         }
 
@@ -253,7 +258,6 @@
             min-height: 500px;
         }
 
-        /* ===== 预览标签样式 ===== */
         .label-preview {
             width: 300px;
             height: 450px;
@@ -280,8 +284,22 @@
             left: 22px;
             font-size: 22px;
             font-weight: bold;
-            color: #D63384;
+            color: #0ABAB5;
             display: none;
+        }
+
+        /* 总数量 - 只显示数字，52px */
+        .preview-total-boxes {
+            position: absolute;
+            top: 65px;
+            left: 22px;
+            font-size: 52px;
+            font-weight: bold;
+            color: #000000;
+            background: transparent;
+            padding: 0;
+            border: none;
+            line-height: 1;
         }
 
         .preview-qrcode {
@@ -303,7 +321,7 @@
         }
 
         .preview-content {
-            margin-top: 105px;
+            margin-top: 125px;
         }
 
         .preview-order {
@@ -328,12 +346,14 @@
             font-weight: bold;
         }
 
-        /* 店面字体放大 */
-        .preview-field.store-field {
-            font-size: 28px;
+        .preview-unit {
+            position: absolute;
+            bottom: 12px;
+            right: 30px;
+            font-size: 32px;
             font-weight: bold;
-            color: #0a2a3a;
-            margin: 12px 0;
+            color: #222;
+            opacity: 0.7;
         }
 
         .preview-page-indicator {
@@ -362,9 +382,9 @@
 
         .page-nav button {
             padding: 6px 16px;
-            border: 1px solid #D63384;
+            border: 1px solid #0ABAB5;
             background: white;
-            color: #D63384;
+            color: #0ABAB5;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
@@ -373,7 +393,7 @@
         }
 
         .page-nav button:hover {
-            background: #D63384;
+            background: #0ABAB5;
             color: white;
         }
 
@@ -412,22 +432,22 @@
         }
 
         .btn-primary {
-            background: #D63384;
+            background: #0ABAB5;
             color: white;
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: #B82A6F;
+            background: #008E9B;
             transform: translateY(-2px);
         }
 
         .btn-secondary {
-            background: #fce4ec;
-            color: #D63384;
+            background: #e9ecef;
+            color: #333;
         }
 
         .btn-secondary:hover {
-            background: #f8bbd0;
+            background: #dee2e6;
         }
 
         .btn:disabled {
@@ -461,7 +481,7 @@
             background: #f8f9fa;
             border-radius: 8px;
             padding: 20px;
-            border-left: 4px solid #D63384;
+            border-left: 4px solid #0ABAB5;
         }
 
         .history-order {
@@ -510,7 +530,7 @@
         }
 
         .management-tab.active {
-            background: #D63384;
+            background: #0ABAB5;
             color: white;
         }
 
@@ -608,8 +628,8 @@
 
         .login-input:focus {
             outline: none;
-            border-color: #D63384;
-            box-shadow: 0 0 0 3px rgba(214, 51, 132, 0.15);
+            border-color: #0ABAB5;
+            box-shadow: 0 0 0 3px rgba(10, 186, 181, 0.1);
         }
 
         .login-error {
@@ -622,7 +642,7 @@
         .login-btn {
             width: 100%;
             padding: 15px;
-            background: #D63384;
+            background: #0ABAB5;
             color: white;
             border: none;
             border-radius: 8px;
@@ -633,7 +653,7 @@
         }
 
         .login-btn:hover {
-            background: #B82A6F;
+            background: #008E9B;
             transform: translateY(-2px);
         }
 
@@ -645,13 +665,13 @@
         }
 
         .print-progress {
-            background: #fce4ec;
-            border: 1px solid #D63384;
+            background: #f0f9f9;
+            border: 1px solid #0ABAB5;
             border-radius: 8px;
             padding: 10px 15px;
             margin-top: 10px;
             font-size: 14px;
-            color: #D63384;
+            color: #0ABAB5;
             text-align: center;
             display: none;
         }
@@ -684,14 +704,21 @@
             .preview-logo1 {
                 height: 35px;
             }
+            .preview-total-boxes {
+                top: 58px;
+                left: 22px;
+                font-size: 42px;
+            }
             .preview-content {
-                margin-top: 85px;
+                margin-top: 105px;
             }
             .preview-order {
                 font-size: 28px;
             }
-            .preview-field.store-field {
-                font-size: 22px;
+            .preview-unit {
+                font-size: 24px;
+                bottom: 8px;
+                right: 20px;
             }
             .preview-page-indicator {
                 font-size: 42px;
@@ -715,7 +742,6 @@
             animation: fadeIn 0.5s ease;
         }
 
-        /* ===== 打印样式 ===== */
         @media print {
             body * {
                 visibility: hidden;
@@ -757,8 +783,22 @@
                 left: 7.3mm;
                 font-size: 7.3mm;
                 font-weight: bold;
-                color: #D63384;
+                color: #0ABAB5;
                 display: none;
+            }
+
+            /* 总数量 - 打印样式，只显示数字，与页码大小一致 */
+            .preview-total-boxes {
+                position: absolute;
+                top: 21mm;
+                left: 7.3mm;
+                font-size: 17.3mm;
+                font-weight: bold;
+                color: #000000;
+                background: transparent;
+                padding: 0;
+                border: none;
+                line-height: 1;
             }
 
             .preview-qrcode {
@@ -778,7 +818,7 @@
             }
 
             .preview-content {
-                margin-top: 35mm;
+                margin-top: 41mm;
             }
 
             .preview-order {
@@ -803,11 +843,13 @@
                 font-weight: bold;
             }
 
-            .preview-field.store-field {
-                font-size: 9.5mm;
+            .preview-unit {
+                position: absolute;
+                bottom: 7.3mm;
+                right: 7.3mm;
+                font-size: 10.7mm;
                 font-weight: bold;
-                color: #0a2a3a;
-                margin: 4mm 0;
+                opacity: 0.7;
             }
 
             .preview-page-indicator {
@@ -853,7 +895,7 @@
         <!-- 头部导航 -->
         <div class="header">
             <div class="logo">
-                <img src="images/form-logonova.png" alt="dafu pano Logo" class="logo-image">
+                <img src="images/form-logonova.png" alt="dafu pano Logo" class="logo-image" onerror="this.style.display='none'">
                 <div class="logo-text">
                     <h1>面单打印小程序</h1>
                     <div class="subtitle">DAFU Label Printing System</div>
@@ -880,8 +922,20 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="required">Loja (店面)</label>
-                        <select id="storeSelect">
+                        <label class="required">Nome Cliente (客户名称)</label>
+                        <input type="text" id="customer" placeholder="Digite Nome Cliente">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Vendedor (销售员)</label>
+                        <select id="staff">
+                            <option value="">Escolher(选择）</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Empacotador (包装员)</label>
+                        <select id="packer">
                             <option value="">Escolher(选择）</option>
                         </select>
                     </div>
@@ -894,6 +948,20 @@
                             <button type="button" class="quantity-btn" onclick="changeQuantity(1)">+</button>
                         </div>
                         <div style="font-size:13px; color:#888; margin-top:6px; text-align:right;">当前数量: <span id="quantityDisplay">1</span></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required">Unidade (单位)</label>
+                        <select id="unit">
+                            <option value="">Escolher(选择）</option>
+                            <option value="CX">CAIXA (箱)</option>
+                            <option value="SC">SACOLA (袋)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Peso kg (重量)</label>
+                        <input type="number" id="weight" placeholder="Digite Peso kg" step="5">
                     </div>
                 </div>
 
@@ -910,16 +978,24 @@
                     <div class="label-preview">
                         <div class="preview-logo1-container">
                             <img src="images/preview-logo1.png" alt="DAFU Logo" class="preview-logo1" onerror="showLogoText()">
-                            <div class="preview-logo1-text" style="display:none;">DAFU ETIQUETA</div>
+                            <div class="preview-logo1-text">DAFU ETIQUETA</div>
                         </div>
-                        <div class="preview-qrcode" id="qrcodeContainer"></div>
+                        <!-- 总数量 - 只显示数字 -->
+                        <div class="preview-total-boxes" id="previewTotalBoxes">0</div>
+                        <div class="preview-qrcode" id="qrcodeContainer">
+                            <div style="font-size:12px;color:#999;text-align:center;">QR Code</div>
+                        </div>
                         <div class="preview-content">
                             <div class="preview-order">№: <span id="previewOrderNo">________</span></div>
                             <div class="preview-divider"></div>
-                            <div class="preview-field store-field">Loja: <span id="previewCustomer">________</span></div>
+                            <div class="preview-field bold">Cliente: <span id="previewCustomer">________</span></div>
+                            <div class="preview-field bold">Vendedora: <span id="previewStaff">________</span></div>
+                            <div class="preview-field">Empacotador: <span id="previewPacker">________</span></div>
                             <div class="preview-field">Data: <span id="previewDate"></span></div>
+                            <div class="preview-field">Peso: <span id="previewWeight">__</span>kg</div>
                             <div class="preview-divider"></div>
                         </div>
+                        <div class="preview-unit" id="previewUnit"></div>
                         <div class="preview-page-indicator" id="previewPageIndicator">1/1</div>
                     </div>
                 </div>
@@ -967,12 +1043,20 @@
                 <div id="managementContent" style="display: none;">
                     <div class="section-title">人员管理</div>
                     <div class="management-tabs">
-                        <div class="management-tab active" onclick="switchManagementTab('packer')">店面管理</div>
+                        <div class="management-tab active" onclick="switchManagementTab('staff')">销售员管理</div>
+                        <div class="management-tab" onclick="switchManagementTab('packer')">包装员管理</div>
                     </div>
-                    <div class="management-content active" id="packerManagement">
+                    <div class="management-content active" id="staffManagement">
                         <div class="add-person-form">
-                            <input type="text" id="newPackerName" placeholder="输入新店面名称" class="person-input">
-                            <button class="btn btn-primary" onclick="addPacker()">添加店面</button>
+                            <input type="text" id="newStaffName" placeholder="输入新销售员姓名" class="person-input">
+                            <button class="btn btn-primary" onclick="addStaff()">添加销售员</button>
+                        </div>
+                        <div class="person-list" id="staffList"></div>
+                    </div>
+                    <div class="management-content" id="packerManagement">
+                        <div class="add-person-form">
+                            <input type="text" id="newPackerName" placeholder="输入新包装员姓名" class="person-input">
+                            <button class="btn btn-primary" onclick="addPacker()">添加包装员</button>
                         </div>
                         <div class="person-list" id="packerList"></div>
                     </div>
@@ -985,35 +1069,46 @@
         // ======================== 全局数据 ========================
         const appData = {
             labelHistory: JSON.parse(localStorage.getItem('labelHistory')) || [],
-            storeList: JSON.parse(localStorage.getItem('storeList')) || ['DAFU', 'LOJA A', 'LOJA B'],
+            staffList: JSON.parse(localStorage.getItem('staffList')) || ['DAFU'],
+            packerList: JSON.parse(localStorage.getItem('packerList')) || ['DAFU'],
             adminCredentials: { username: 'admin', password: 'admin' },
             isAdminLoggedIn: false,
             currentQRCodeDataURL: null,
             currentPage: 1,
             totalPages: 1,
-            qrCodeCache: {}
+            qrCodeCache: {},
+            isGenerating: false
         };
 
         // ======================== 初始化 ========================
         document.addEventListener('DOMContentLoaded', function() {
             initApp();
             updatePreviewDate();
-            loadStoreOptions();
+            loadStaffOptions();
+            loadPackerOptions();
             syncQuantityDisplay();
             updateTotalPages();
             updatePageIndicator();
             updateNavButtons();
+            updateTotalBoxes();
         });
 
         function initApp() {
             document.getElementById('orderNo').addEventListener('input', validateOrderNo);
-            document.getElementById('storeSelect').addEventListener('change', validateForm);
+            document.getElementById('customer').addEventListener('input', validateForm);
+            document.getElementById('staff').addEventListener('change', validateForm);
+            document.getElementById('packer').addEventListener('change', validateForm);
             document.getElementById('quantity').addEventListener('input', function() {
                 validateForm();
                 syncQuantityDisplay();
                 updateTotalPages();
                 updatePageIndicator();
                 updateNavButtons();
+                updateTotalBoxes();
+            });
+            document.getElementById('unit').addEventListener('change', function() {
+                validateForm();
+                updateTotalBoxes();
             });
             document.getElementById('adminPassword').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') adminLogin();
@@ -1030,6 +1125,18 @@
             }
             updatePageIndicator();
             updateNavButtons();
+            updateTotalBoxes();
+        }
+
+        function updateTotalBoxes() {
+            const qty = parseInt(document.getElementById('quantity').value) || 0;
+            const totalBoxes = document.getElementById('previewTotalBoxes');
+            if (qty > 0) {
+                totalBoxes.textContent = qty;
+                totalBoxes.style.display = 'block';
+            } else {
+                totalBoxes.style.display = 'none';
+            }
         }
 
         function updatePageIndicator() {
@@ -1064,6 +1171,7 @@
             qtyInput.value = val;
             document.getElementById('quantityDisplay').textContent = val;
             updateTotalPages();
+            updateTotalBoxes();
         }
 
         function showLogoText() {
@@ -1082,6 +1190,7 @@
                 appData.isAdminLoggedIn = true;
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('managementContent').style.display = 'block';
+                renderStaffList();
                 renderPackerList();
                 showNotification('管理员登录成功', 'success');
             } else {
@@ -1099,26 +1208,53 @@
             return true;
         }
 
-        // ======================== 店面管理 ========================
-        function loadStoreOptions() {
-            const select = document.getElementById('storeSelect');
+        // ======================== 人员管理 ========================
+        function loadStaffOptions() {
+            const select = document.getElementById('staff');
             select.innerHTML = '<option value="">Escolher(选择）</option>';
-            appData.storeList.forEach(store => {
+            appData.staffList.forEach(s => {
                 const opt = document.createElement('option');
-                opt.value = store;
-                opt.textContent = store;
+                opt.value = s;
+                opt.textContent = s;
                 select.appendChild(opt);
+            });
+        }
+
+        function loadPackerOptions() {
+            const select = document.getElementById('packer');
+            select.innerHTML = '<option value="">Escolher(选择）</option>';
+            appData.packerList.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderStaffList() {
+            const container = document.getElementById('staffList');
+            container.innerHTML = '';
+            if (appData.staffList.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">暂无销售员</div>';
+                return;
+            }
+            appData.staffList.forEach((name, idx) => {
+                const div = document.createElement('div');
+                div.className = 'person-item';
+                div.innerHTML =
+                    `<span>${name}</span><div class="person-actions"><button class="btn btn-small btn-danger" onclick="deleteStaff(${idx})">删除</button></div>`;
+                container.appendChild(div);
             });
         }
 
         function renderPackerList() {
             const container = document.getElementById('packerList');
             container.innerHTML = '';
-            if (appData.storeList.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">暂无店面</div>';
+            if (appData.packerList.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">暂无包装员</div>';
                 return;
             }
-            appData.storeList.forEach((name, idx) => {
+            appData.packerList.forEach((name, idx) => {
                 const div = document.createElement('div');
                 div.className = 'person-item';
                 div.innerHTML =
@@ -1127,25 +1263,49 @@
             });
         }
 
+        function addStaff() {
+            if (!checkAdminPermission()) return;
+            const name = document.getElementById('newStaffName').value.trim();
+            if (!name) { showNotification('请输入销售员姓名', 'error'); return; }
+            if (appData.staffList.includes(name)) { showNotification('该销售员已存在', 'error'); return; }
+            appData.staffList.push(name);
+            localStorage.setItem('staffList', JSON.stringify(appData.staffList));
+            document.getElementById('newStaffName').value = '';
+            loadStaffOptions();
+            renderStaffList();
+            showNotification('销售员添加成功', 'success');
+        }
+
+        function deleteStaff(index) {
+            if (!checkAdminPermission()) return;
+            if (confirm('确定删除？')) {
+                appData.staffList.splice(index, 1);
+                localStorage.setItem('staffList', JSON.stringify(appData.staffList));
+                loadStaffOptions();
+                renderStaffList();
+                showNotification('已删除', 'success');
+            }
+        }
+
         function addPacker() {
             if (!checkAdminPermission()) return;
             const name = document.getElementById('newPackerName').value.trim();
-            if (!name) { showNotification('请输入店面名称', 'error'); return; }
-            if (appData.storeList.includes(name)) { showNotification('该店面已存在', 'error'); return; }
-            appData.storeList.push(name);
-            localStorage.setItem('storeList', JSON.stringify(appData.storeList));
+            if (!name) { showNotification('请输入包装员姓名', 'error'); return; }
+            if (appData.packerList.includes(name)) { showNotification('该包装员已存在', 'error'); return; }
+            appData.packerList.push(name);
+            localStorage.setItem('packerList', JSON.stringify(appData.packerList));
             document.getElementById('newPackerName').value = '';
-            loadStoreOptions();
+            loadPackerOptions();
             renderPackerList();
-            showNotification('店面添加成功', 'success');
+            showNotification('包装员添加成功', 'success');
         }
 
         function deletePacker(index) {
             if (!checkAdminPermission()) return;
             if (confirm('确定删除？')) {
-                appData.storeList.splice(index, 1);
-                localStorage.setItem('storeList', JSON.stringify(appData.storeList));
-                loadStoreOptions();
+                appData.packerList.splice(index, 1);
+                localStorage.setItem('packerList', JSON.stringify(appData.packerList));
+                loadPackerOptions();
                 renderPackerList();
                 showNotification('已删除', 'success');
             }
@@ -1177,9 +1337,12 @@
 
         function validateForm() {
             const orderNo = document.getElementById('orderNo').value;
-            const store = document.getElementById('storeSelect').value;
+            const customer = document.getElementById('customer').value;
+            const staff = document.getElementById('staff').value;
+            const packer = document.getElementById('packer').value;
             const quantity = parseInt(document.getElementById('quantity').value) || 0;
-            const valid = orderNo.length === 8 && store && quantity > 0;
+            const unit = document.getElementById('unit').value;
+            const valid = orderNo.length === 8 && customer && staff && packer && quantity > 0 && unit;
             document.getElementById('generateBtn').disabled = !valid;
             return valid;
         }
@@ -1195,6 +1358,7 @@
             updateTotalPages();
             updatePageIndicator();
             updateNavButtons();
+            updateTotalBoxes();
         }
 
         // ======================== 日期 ========================
@@ -1209,78 +1373,195 @@
             document.getElementById('previewDate').textContent = `${day} ${month} ${year} ${hours}:${minutes}`;
         }
 
+        // ======================== 二维码生成（核心修复） ========================
+
+        /**
+         * 生成单个二维码 DataURL，带重试机制
+         * @param {string} text 二维码内容
+         * @param {number} size 尺寸
+         * @param {number} retries 重试次数
+         * @returns {Promise<string|null>}
+         */
+        function createQRCodeDataURL(text, size = 90, retries = 3) {
+            return new Promise((resolve) => {
+                // 防御：库未加载
+                if (typeof QRCode === 'undefined' || typeof QRCode.toCanvas !== 'function') {
+                    console.error('QRCode 库未加载');
+                    resolve(null);
+                    return;
+                }
+
+                const attempt = (left) => {
+                    try {
+                        QRCode.toCanvas(text, {
+                            width: size,
+                            margin: 1,
+                            color: { dark: '#000000', light: '#ffffff' }
+                        }, function (error, canvas) {
+                            if (error || !canvas) {
+                                if (left > 0) {
+                                    setTimeout(() => attempt(left - 1), 80);
+                                } else {
+                                    console.error('二维码生成失败(已达最大重试):', error);
+                                    resolve(null);
+                                }
+                                return;
+                            }
+                            try {
+                                const dataURL = canvas.toDataURL('image/png');
+                                // 有效性检查：空图或异常图重试
+                                if (!dataURL || dataURL.length < 100) {
+                                    if (left > 0) {
+                                        setTimeout(() => attempt(left - 1), 80);
+                                    } else {
+                                        resolve(null);
+                                    }
+                                    return;
+                                }
+                                resolve(dataURL);
+                            } catch (e) {
+                                if (left > 0) {
+                                    setTimeout(() => attempt(left - 1), 80);
+                                } else {
+                                    resolve(null);
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        if (left > 0) {
+                            setTimeout(() => attempt(left - 1), 80);
+                        } else {
+                            console.error('二维码生成异常:', e);
+                            resolve(null);
+                        }
+                    }
+                };
+                attempt(retries);
+            });
+        }
+
+        /**
+         * 更新预览二维码（单个）
+         */
+        async function generateQRCode(orderNo, callback) {
+            const container = document.getElementById('qrcodeContainer');
+            container.innerHTML = '<div style="font-size:12px;color:#999;text-align:center;">生成中...</div>';
+
+            const dataURL = await createQRCodeDataURL(orderNo, 90);
+
+            if (!dataURL) {
+                container.innerHTML = '<div style="text-align:center;color:#666;font-size:14px;">QR Code</div>';
+                if (callback) callback(null);
+                return;
+            }
+
+            appData.currentQRCodeDataURL = dataURL;
+
+            const img = document.createElement('img');
+            img.src = dataURL;
+            img.alt = 'QR Code';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            container.innerHTML = '';
+            container.appendChild(img);
+
+            if (callback) callback(dataURL);
+        }
+
+        /**
+         * 批量生成：同一订单号只生成一次，所有页复用
+         * 从根本上消除高并发 Canvas 失败问题
+         */
+        async function generateAllQRCodes(orderNo, total, callback) {
+            appData.qrCodeCache = {};
+
+            if (total <= 0) {
+                if (callback) callback();
+                return;
+            }
+
+            // 复用已生成的二维码，避免重复生成
+            let dataURL = appData.currentQRCodeDataURL;
+            if (!dataURL) {
+                dataURL = await createQRCodeDataURL(orderNo, 80);
+            }
+            if (!dataURL) {
+                // 再兜底重试一次（更多次数）
+                dataURL = await createQRCodeDataURL(orderNo, 80, 5);
+            }
+
+            // 无论成功与否，都填充所有页，避免某页缺图
+            for (let i = 1; i <= total; i++) {
+                appData.qrCodeCache[i] = dataURL || '';
+            }
+
+            if (callback) callback();
+        }
+
         // ======================== 生成标签 ========================
-        function generateLabel() {
+        async function generateLabel() {
+            if (appData.isGenerating) return;
             if (!validateForm()) {
                 alert('请填写完整的必填信息');
                 return;
             }
-            appData.currentPage = 1;
-            updateTotalPages();
-            updatePageIndicator();
-            updateNavButtons();
-            updatePreview();
-            generateAllQRCodes();
-            document.getElementById('printBtn').disabled = false;
-            showNotification(`标签生成成功！共 ${appData.totalPages} 页`, 'success');
-        }
 
-        function generateAllQRCodes() {
-            const orderNo = document.getElementById('orderNo').value;
-            const total = appData.totalPages;
-            appData.qrCodeCache = {};
+            appData.isGenerating = true;
+            const generateBtn = document.getElementById('generateBtn');
+            const printBtn = document.getElementById('printBtn');
+            generateBtn.disabled = true;
+            printBtn.disabled = true;
 
-            for (let i = 1; i <= total; i++) {
-                const canvas = document.createElement('canvas');
-                QRCode.toCanvas(canvas, orderNo, {
-                    width: 80,
-                    margin: 1,
-                    color: { dark: '#000000', light: '#ffffff' }
-                }, function(error) {
-                    if (!error) {
-                        appData.qrCodeCache[i] = canvas.toDataURL('image/png');
-                    } else {
-                        appData.qrCodeCache[i] = null;
-                    }
-                });
-            }
+            try {
+                appData.currentPage = 1;
+                updateTotalPages();
+                updatePageIndicator();
+                updateNavButtons();
+                updatePreview();
+                updateTotalBoxes();
 
-            const container = document.getElementById('qrcodeContainer');
-            container.innerHTML = '';
-            QRCode.toCanvas(orderNo, { width: 80, margin: 1, color: { dark: '#000000', light: '#ffffff' } },
-                function(error, canvas) {
-                    if (error) {
-                        container.innerHTML = '<div style="text-align:center;color:#666;">QR Code</div>';
-                    } else {
-                        const dataURL = canvas.toDataURL('image/png');
-                        appData.currentQRCodeDataURL = dataURL;
-                        const img = document.createElement('img');
-                        img.src = dataURL;
-                        img.alt = 'QR Code';
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                        container.appendChild(img);
-                    }
+                const orderNo = document.getElementById('orderNo').value;
+                const total = appData.totalPages;
+
+                // 先生成预览二维码（同时设置 currentQRCodeDataURL）
+                await new Promise((resolve) => {
+                    generateQRCode(orderNo, () => resolve());
                 });
 
-            setTimeout(() => {
-                for (let i = 1; i <= total; i++) {
-                    if (!appData.qrCodeCache[i]) {
-                        appData.qrCodeCache[i] = appData.currentQRCodeDataURL;
-                    }
+                // 再填充批量缓存
+                await new Promise((resolve) => {
+                    generateAllQRCodes(orderNo, total, () => resolve());
+                });
+
+                // 只要有任一页有二维码，就允许打印
+                const hasAnyQR = Object.values(appData.qrCodeCache).some(v => v);
+                printBtn.disabled = !hasAnyQR;
+
+                if (hasAnyQR) {
+                    showNotification(`标签生成成功！共 ${total} 页`, 'success');
+                } else {
+                    showNotification('二维码生成失败，请重试或检查网络', 'error');
                 }
-            }, 500);
+            } finally {
+                appData.isGenerating = false;
+                // 根据表单有效性恢复生成按钮
+                validateForm();
+            }
         }
 
         function updatePreview() {
             document.getElementById('previewOrderNo').textContent = document.getElementById('orderNo').value;
-            const storeSelect = document.getElementById('storeSelect');
-            document.getElementById('previewCustomer').textContent = storeSelect.options[storeSelect.selectedIndex]?.text || '________';
+            document.getElementById('previewCustomer').textContent = document.getElementById('customer').value;
+            document.getElementById('previewStaff').textContent = document.getElementById('staff').value;
+            document.getElementById('previewPacker').textContent = document.getElementById('packer').value;
+            document.getElementById('previewWeight').textContent = document.getElementById('weight').value || '__';
+            document.getElementById('previewUnit').textContent = document.getElementById('unit').value;
             updatePreviewDate();
             syncQuantityDisplay();
             updateTotalPages();
             updatePageIndicator();
             updateNavButtons();
+            updateTotalBoxes();
         }
 
         // ======================== 批量打印 ========================
@@ -1296,9 +1577,13 @@
             progressDiv.textContent = `正在准备打印 ${total} 张标签...`;
 
             const orderNo = document.getElementById('orderNo').value;
-            const storeSelect = document.getElementById('storeSelect');
-            const storeName = storeSelect.options[storeSelect.selectedIndex]?.text || '—';
+            const customer = document.getElementById('customer').value;
+            const staff = document.getElementById('staff').value;
+            const packer = document.getElementById('packer').value;
+            const weight = document.getElementById('weight').value || '__';
+            const unit = document.getElementById('unit').value;
             const dateStr = document.getElementById('previewDate').textContent;
+            const totalBoxes = total;
 
             const labelsHTML = [];
             for (let page = 1; page <= total; page++) {
@@ -1309,16 +1594,21 @@
                             <img src="images/preview-logo1.png" alt="DAFU Logo" class="preview-logo1" onerror="this.style.display='none'; this.parentElement.querySelector('.preview-logo1-text').style.display='block'">
                             <div class="preview-logo1-text" style="display:none;">DAFU ETIQUETA</div>
                         </div>
+                        <div class="preview-total-boxes">${totalBoxes}</div>
                         <div class="preview-qrcode">
-                            <img src="${qrData}" alt="QR Code">
+                            ${qrData ? `<img src="${qrData}" alt="QR Code">` : '<div style="font-size:10px;color:#999;">NO QR</div>'}
                         </div>
                         <div class="preview-content">
                             <div class="preview-order">№: ${orderNo}</div>
                             <div class="preview-divider"></div>
-                            <div class="preview-field store-field">Loja: ${storeName}</div>
+                            <div class="preview-field bold">Cliente: ${customer}</div>
+                            <div class="preview-field bold">Vendedora: ${staff}</div>
+                            <div class="preview-field">Empacotador: ${packer}</div>
                             <div class="preview-field">Data: ${dateStr}</div>
+                            <div class="preview-field">Peso: ${weight}kg</div>
                             <div class="preview-divider"></div>
                         </div>
+                        <div class="preview-unit">${unit}</div>
                         <div class="preview-page-indicator">${page}/${total}</div>
                     </div>
                 `);
@@ -1377,8 +1667,20 @@
                             left: 7.3mm;
                             font-size: 7.3mm;
                             font-weight: bold;
-                            color: #D63384;
+                            color: #0ABAB5;
                             display: none;
+                        }
+                        .preview-total-boxes {
+                            position: absolute;
+                            top: 21mm;
+                            left: 7.3mm;
+                            font-size: 17.3mm;
+                            font-weight: bold;
+                            color: #000000;
+                            background: transparent;
+                            padding: 0;
+                            border: none;
+                            line-height: 1;
                         }
                         .preview-qrcode {
                             position: absolute;
@@ -1395,7 +1697,7 @@
                             height: 100% !important;
                         }
                         .preview-content {
-                            margin-top: 35mm;
+                            margin-top: 41mm;
                         }
                         .preview-order {
                             font-size: 12mm;
@@ -1415,11 +1717,13 @@
                         .preview-field.bold {
                             font-weight: bold;
                         }
-                        .preview-field.store-field {
-                            font-size: 9.5mm;
+                        .preview-unit {
+                            position: absolute;
+                            bottom: 7.3mm;
+                            right: 7.3mm;
+                            font-size: 10.7mm;
                             font-weight: bold;
-                            color: #0a2a3a;
-                            margin: 4mm 0;
+                            opacity: 0.7;
                         }
                         .preview-page-indicator {
                             position: absolute;
@@ -1444,20 +1748,9 @@
                             border-radius: 8px;
                         }
                         @media print {
-                            body { 
-                                background: white; 
-                                padding: 0; 
-                                margin: 0;
-                            }
-                            .print-header { 
-                                display: none; 
-                            }
-                            .label-preview { 
-                                margin: 0 auto; 
-                                page-break-after: always; 
-                                border: 2px solid #000;
-                                box-shadow: none;
-                            }
+                            body { background: white; padding: 0; margin: 0; }
+                            .print-header { display: none; }
+                            .label-preview { margin: 0 auto; page-break-after: always; border: 2px solid #000; box-shadow: none; }
                         }
                     </style>
                 </head>
@@ -1485,13 +1778,15 @@
 
         // ======================== 保存 ========================
         function saveToHistory() {
-            const storeSelect = document.getElementById('storeSelect');
-            const storeName = storeSelect.options[storeSelect.selectedIndex]?.text || '—';
             const labelData = {
                 id: Date.now(),
                 orderNo: document.getElementById('orderNo').value,
-                customer: storeName,
+                customer: document.getElementById('customer').value,
+                staff: document.getElementById('staff').value,
+                packer: document.getElementById('packer').value,
                 quantity: document.getElementById('quantity').value,
+                unit: document.getElementById('unit').value,
+                weight: document.getElementById('weight').value,
                 createTime: new Date().toLocaleString('zh-CN'),
                 printed: true,
                 totalPages: appData.totalPages
@@ -1508,20 +1803,31 @@
 
         function resetForm() {
             document.getElementById('orderNo').value = '';
-            document.getElementById('storeSelect').selectedIndex = 0;
+            document.getElementById('customer').value = '';
+            document.getElementById('staff').selectedIndex = 0;
+            document.getElementById('packer').selectedIndex = 0;
             document.getElementById('quantity').value = '1';
+            document.getElementById('unit').selectedIndex = 0;
+            document.getElementById('weight').value = '';
             document.getElementById('printBtn').disabled = true;
             document.getElementById('previewOrderNo').textContent = '________';
             document.getElementById('previewCustomer').textContent = '________';
-            document.getElementById('qrcodeContainer').innerHTML = '';
+            document.getElementById('previewStaff').textContent = '________';
+            document.getElementById('previewPacker').textContent = '________';
+            document.getElementById('previewWeight').textContent = '__';
+            document.getElementById('previewUnit').textContent = '';
+            document.getElementById('qrcodeContainer').innerHTML = '<div style="font-size:12px;color:#999;text-align:center;">QR Code</div>';
             appData.currentQRCodeDataURL = null;
             appData.qrCodeCache = {};
             appData.currentPage = 1;
+            appData.isGenerating = false;
             updateTotalPages();
             updatePageIndicator();
             updateNavButtons();
             syncQuantityDisplay();
+            updateTotalBoxes();
             document.getElementById('printProgress').style.display = 'none';
+            validateForm();
             showNotification('Atualizado', 'info');
         }
 
@@ -1562,8 +1868,10 @@
             grid.innerHTML = history.map(item => `
                 <div class="history-card fade-in">
                     <div class="history-order">订单: ${item.orderNo}</div>
-                    <div class="history-customer">店面: ${item.customer || '—'}</div>
-                    <div class="history-meta"><span>数量: ${item.quantity}</span><span>${item.createTime}</span></div>
+                    <div class="history-customer">客户: ${item.customer}</div>
+                    <div class="history-customer">销售员: ${item.staff}</div>
+                    <div class="history-customer">包装员: ${item.packer}</div>
+                    <div class="history-meta"><span>${item.quantity} ${item.unit}</span><span>${item.createTime}</span></div>
                 </div>
             `).join('');
         }
@@ -1580,7 +1888,7 @@
         // ======================== 通知 ========================
         function showNotification(message, type = 'info') {
             const notif = document.createElement('div');
-            const bgColor = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#D63384';
+            const bgColor = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#0ABAB5';
             notif.style.cssText = `
                 position:fixed; top:20px; right:20px; background:${bgColor}; color:white;
                 padding:15px 20px; border-radius:5px; box-shadow:0 4px 12px rgba(0,0,0,0.15);
