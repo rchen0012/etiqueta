@@ -1077,8 +1077,37 @@
             currentPage: 1,
             totalPages: 1,
             qrCodeCache: {},
-            isGenerating: false
+            isGenerating: false,
+            generationVersion: 0,
+            generatedLabel: null
         };
+
+
+        const labelFields = ['orderNo', 'customer', 'staff', 'packer', 'quantity', 'unit', 'weight'];
+        function readLabelFields() {
+            return Object.fromEntries(labelFields.map(id => [id, document.getElementById(id).value]));
+        }
+        function labelSignature(data) {
+            return JSON.stringify(labelFields.map(id => data[id]));
+        }
+        function invalidateLabel() {
+            appData.generationVersion++;
+            appData.generatedLabel = null;
+            appData.currentQRCodeDataURL = null;
+            appData.qrCodeCache = {};
+            appData.isGenerating = false;
+            document.getElementById('printBtn').disabled = true;
+            document.getElementById('qrcodeContainer').textContent = '请重新生成标签';
+        }
+        function isLabelReady() {
+            const label = appData.generatedLabel;
+            return !!label && !appData.isGenerating &&
+                label.signature === labelSignature(readLabelFields()) &&
+                label.qrOrderNo === label.fields.orderNo && !!label.qrData;
+        }
+        function escapeHTML(value) {
+            return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
 
         // ======================== 初始化 ========================
         document.addEventListener('DOMContentLoaded', function() {
@@ -1094,6 +1123,12 @@
         });
 
         function initApp() {
+            labelFields.forEach(id => {
+                ['input', 'change'].forEach(type => document.getElementById(id).addEventListener(type, () => {
+                    invalidateLabel();
+                    validateForm();
+                }));
+            });
             document.getElementById('orderNo').addEventListener('input', validateOrderNo);
             document.getElementById('customer').addEventListener('input', validateForm);
             document.getElementById('staff').addEventListener('change', validateForm);
@@ -1342,13 +1377,16 @@
             const packer = document.getElementById('packer').value;
             const quantity = parseInt(document.getElementById('quantity').value) || 0;
             const unit = document.getElementById('unit').value;
-            const valid = orderNo.length === 8 && customer && staff && packer && quantity > 0 && unit;
-            document.getElementById('generateBtn').disabled = !valid;
+            const valid = /^\d{8}$/.test(orderNo) && customer.trim() && staff && packer && quantity > 0 && unit;
+            if (appData.generatedLabel && !isLabelReady()) invalidateLabel();
+            document.getElementById('printBtn').disabled = !isLabelReady();
+            document.getElementById('generateBtn').disabled = !valid || appData.isGenerating;
             return valid;
         }
 
         // ======================== 数量控制 ========================
         function changeQuantity(delta) {
+            invalidateLabel();
             const input = document.getElementById('quantity');
             let val = parseInt(input.value) || 1;
             val = Math.max(1, val + delta);
@@ -1395,7 +1433,7 @@
                     try {
                         QRCode.toCanvas(text, {
                             width: size,
-                            margin: 1,
+                            margin: 4,
                             color: { dark: '#000000', light: '#ffffff' }
                         }, function (error, canvas) {
                             if (error || !canvas) {
@@ -1440,111 +1478,55 @@
             });
         }
 
-        /**
-         * 更新预览二维码（单个）
-         */
-        async function generateQRCode(orderNo, callback) {
-            const container = document.getElementById('qrcodeContainer');
-            container.innerHTML = '<div style="font-size:12px;color:#999;text-align:center;">生成中...</div>';
-
-            const dataURL = await createQRCodeDataURL(orderNo, 90);
-
-            if (!dataURL) {
-                container.innerHTML = '<div style="text-align:center;color:#666;font-size:14px;">QR Code</div>';
-                if (callback) callback(null);
-                return;
-            }
-
-            appData.currentQRCodeDataURL = dataURL;
-
-            const img = document.createElement('img');
-            img.src = dataURL;
-            img.alt = 'QR Code';
-            img.style.width = '100%';
-            img.style.height = '100%';
-            container.innerHTML = '';
-            container.appendChild(img);
-
-            if (callback) callback(dataURL);
-        }
-
-        /**
-         * 批量生成：同一订单号只生成一次，所有页复用
-         * 从根本上消除高并发 Canvas 失败问题
-         */
-        async function generateAllQRCodes(orderNo, total, callback) {
-            appData.qrCodeCache = {};
-
-            if (total <= 0) {
-                if (callback) callback();
-                return;
-            }
-
-            // 复用已生成的二维码，避免重复生成
-            let dataURL = appData.currentQRCodeDataURL;
-            if (!dataURL) {
-                dataURL = await createQRCodeDataURL(orderNo, 80);
-            }
-            if (!dataURL) {
-                // 再兜底重试一次（更多次数）
-                dataURL = await createQRCodeDataURL(orderNo, 80, 5);
-            }
-
-            // 无论成功与否，都填充所有页，避免某页缺图
-            for (let i = 1; i <= total; i++) {
-                appData.qrCodeCache[i] = dataURL || '';
-            }
-
-            if (callback) callback();
-        }
-
-        // ======================== 生成标签 ========================
+        // 同一任务只生成一次二维码；文字与二维码绑定同一份数据。
         async function generateLabel() {
             if (appData.isGenerating) return;
             if (!validateForm()) {
                 alert('请填写完整的必填信息');
                 return;
             }
-
+            invalidateLabel();
+            appData.currentPage = 1;
+            updatePreview();
+            const fields = Object.freeze(readLabelFields());
+            const signature = labelSignature(fields);
+            const dateStr = document.getElementById('previewDate').textContent;
+            const total = appData.totalPages;
+            const version = appData.generationVersion;
             appData.isGenerating = true;
-            const generateBtn = document.getElementById('generateBtn');
-            const printBtn = document.getElementById('printBtn');
-            generateBtn.disabled = true;
-            printBtn.disabled = true;
-
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('qrcodeContainer').textContent = '生成中...';
             try {
-                appData.currentPage = 1;
-                updateTotalPages();
-                updatePageIndicator();
-                updateNavButtons();
-                updatePreview();
-                updateTotalBoxes();
-
-                const orderNo = document.getElementById('orderNo').value;
-                const total = appData.totalPages;
-
-                // 先生成预览二维码（同时设置 currentQRCodeDataURL）
-                await new Promise((resolve) => {
-                    generateQRCode(orderNo, () => resolve());
-                });
-
-                // 再填充批量缓存
-                await new Promise((resolve) => {
-                    generateAllQRCodes(orderNo, total, () => resolve());
-                });
-
-                // 只要有任一页有二维码，就允许打印
-                const hasAnyQR = Object.values(appData.qrCodeCache).some(v => v);
-                printBtn.disabled = !hasAnyQR;
-
-                if (hasAnyQR) {
-                    showNotification(`标签生成成功！共 ${total} 页`, 'success');
-                } else {
-                    showNotification('二维码生成失败，请重试或检查网络', 'error');
+                const qrData = await createQRCodeDataURL(fields.orderNo, 360);
+                if (version !== appData.generationVersion) return;
+                if (signature !== labelSignature(readLabelFields())) {
+                    invalidateLabel();
+                    return;
                 }
+                if (!qrData) throw new Error('二维码生成失败，请重新生成');
+                const img = document.createElement('img');
+                img.src = qrData;
+                img.alt = '订单 ' + fields.orderNo;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                if (typeof img.decode === 'function') await img.decode();
+                if (version !== appData.generationVersion) return;
+                if (signature !== labelSignature(readLabelFields())) {
+                    invalidateLabel();
+                    return;
+                }
+                const container = document.getElementById('qrcodeContainer');
+                container.innerHTML = '';
+                container.appendChild(img);
+                appData.generatedLabel = Object.freeze({fields, signature, dateStr, total, qrData, qrOrderNo: fields.orderNo});
+                appData.currentQRCodeDataURL = qrData;
+                showNotification('标签生成成功！共 ' + total + ' 页', 'success');
+            } catch (error) {
+                if (version !== appData.generationVersion) return;
+                invalidateLabel();
+                showNotification(error.message || '二维码生成失败，请重新生成', 'error');
             } finally {
-                appData.isGenerating = false;
-                // 根据表单有效性恢复生成按钮
+                if (version === appData.generationVersion) appData.isGenerating = false;
                 validateForm();
             }
         }
@@ -1566,28 +1548,29 @@
 
         // ======================== 批量打印 ========================
         function printAllLabels() {
-            if (!validateForm()) {
-                alert('请先生成有效的标签');
+            if (!validateForm() || !isLabelReady()) {
+                alert('信息已修改或二维码未生成，请重新生成标签');
                 return;
             }
 
-            const total = appData.totalPages;
+            const label = appData.generatedLabel;
+            const total = label.total;
             const progressDiv = document.getElementById('printProgress');
             progressDiv.style.display = 'block';
             progressDiv.textContent = `正在准备打印 ${total} 张标签...`;
 
-            const orderNo = document.getElementById('orderNo').value;
-            const customer = document.getElementById('customer').value;
-            const staff = document.getElementById('staff').value;
-            const packer = document.getElementById('packer').value;
-            const weight = document.getElementById('weight').value || '__';
-            const unit = document.getElementById('unit').value;
-            const dateStr = document.getElementById('previewDate').textContent;
+            const orderNo = escapeHTML(label.fields.orderNo);
+            const customer = escapeHTML(label.fields.customer);
+            const staff = escapeHTML(label.fields.staff);
+            const packer = escapeHTML(label.fields.packer);
+            const weight = escapeHTML(label.fields.weight || '__');
+            const unit = escapeHTML(label.fields.unit);
+            const dateStr = escapeHTML(label.dateStr);
             const totalBoxes = total;
 
             const labelsHTML = [];
             for (let page = 1; page <= total; page++) {
-                const qrData = appData.qrCodeCache[page] || appData.currentQRCodeDataURL || '';
+                const qrData = label.qrData;
                 labelsHTML.push(`
                     <div class="label-preview">
                         <div class="preview-logo1-container">
@@ -1802,6 +1785,7 @@
         }
 
         function resetForm() {
+            invalidateLabel();
             document.getElementById('orderNo').value = '';
             document.getElementById('customer').value = '';
             document.getElementById('staff').selectedIndex = 0;
