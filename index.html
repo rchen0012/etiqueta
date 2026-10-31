@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大福面单打印 · 修复打印尺寸</title>
+    <title>大福面单打印 · Google Sheets 人员管理</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <script>
         // CDN 兜底：jsdelivr 失败时切换 unpkg
@@ -1042,6 +1042,8 @@
 
                 <div id="managementContent" style="display: none;">
                     <div class="section-title">人员管理</div>
+                    <p id="personnelSyncStatus" role="status" style="margin:0 0 12px;color:#555;font-size:13px">正在连接 Google Sheets...</p>
+                    <button class="btn btn-secondary btn-small" type="button" onclick="refreshPersonnel()" style="margin-bottom:16px">刷新共享名单</button>
                     <div class="management-tabs">
                         <div class="management-tab active" onclick="switchManagementTab('staff')">销售员管理</div>
                         <div class="management-tab" onclick="switchManagementTab('packer')">包装员管理</div>
@@ -1071,7 +1073,6 @@
             labelHistory: JSON.parse(localStorage.getItem('labelHistory')) || [],
             staffList: JSON.parse(localStorage.getItem('staffList')) || ['DAFU'],
             packerList: JSON.parse(localStorage.getItem('packerList')) || ['DAFU'],
-            adminCredentials: { username: 'admin', password: 'admin' },
             isAdminLoggedIn: false,
             currentQRCodeDataURL: null,
             currentPage: 1,
@@ -1217,24 +1218,6 @@
         }
 
         // ======================== 管理员 ========================
-        function adminLogin() {
-            const username = document.getElementById('adminUsername').value.trim();
-            const password = document.getElementById('adminPassword').value;
-            const loginError = document.getElementById('loginError');
-            if (username === appData.adminCredentials.username && password === appData.adminCredentials.password) {
-                appData.isAdminLoggedIn = true;
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('managementContent').style.display = 'block';
-                renderStaffList();
-                renderPackerList();
-                showNotification('管理员登录成功', 'success');
-            } else {
-                loginError.style.display = 'block';
-                document.getElementById('adminPassword').value = '';
-                setTimeout(() => { loginError.style.display = 'none'; }, 3000);
-            }
-        }
-
         function checkAdminPermission() {
             if (!appData.isAdminLoggedIn) {
                 showNotification('请先登录管理员账号', 'error');
@@ -1246,6 +1229,7 @@
         // ======================== 人员管理 ========================
         function loadStaffOptions() {
             const select = document.getElementById('staff');
+            const selected = select.value;
             select.innerHTML = '<option value="">Escolher(选择）</option>';
             appData.staffList.forEach(s => {
                 const opt = document.createElement('option');
@@ -1253,10 +1237,13 @@
                 opt.textContent = s;
                 select.appendChild(opt);
             });
+            select.value = selected;
+            if (select.value !== selected) { invalidateLabel(); validateForm(); }
         }
 
         function loadPackerOptions() {
             const select = document.getElementById('packer');
+            const selected = select.value;
             select.innerHTML = '<option value="">Escolher(选择）</option>';
             appData.packerList.forEach(p => {
                 const opt = document.createElement('option');
@@ -1264,86 +1251,8 @@
                 opt.textContent = p;
                 select.appendChild(opt);
             });
-        }
-
-        function renderStaffList() {
-            const container = document.getElementById('staffList');
-            container.innerHTML = '';
-            if (appData.staffList.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">暂无销售员</div>';
-                return;
-            }
-            appData.staffList.forEach((name, idx) => {
-                const div = document.createElement('div');
-                div.className = 'person-item';
-                div.innerHTML =
-                    `<span>${name}</span><div class="person-actions"><button class="btn btn-small btn-danger" onclick="deleteStaff(${idx})">删除</button></div>`;
-                container.appendChild(div);
-            });
-        }
-
-        function renderPackerList() {
-            const container = document.getElementById('packerList');
-            container.innerHTML = '';
-            if (appData.packerList.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">暂无包装员</div>';
-                return;
-            }
-            appData.packerList.forEach((name, idx) => {
-                const div = document.createElement('div');
-                div.className = 'person-item';
-                div.innerHTML =
-                    `<span>${name}</span><div class="person-actions"><button class="btn btn-small btn-danger" onclick="deletePacker(${idx})">删除</button></div>`;
-                container.appendChild(div);
-            });
-        }
-
-        function addStaff() {
-            if (!checkAdminPermission()) return;
-            const name = document.getElementById('newStaffName').value.trim();
-            if (!name) { showNotification('请输入销售员姓名', 'error'); return; }
-            if (appData.staffList.includes(name)) { showNotification('该销售员已存在', 'error'); return; }
-            appData.staffList.push(name);
-            localStorage.setItem('staffList', JSON.stringify(appData.staffList));
-            document.getElementById('newStaffName').value = '';
-            loadStaffOptions();
-            renderStaffList();
-            showNotification('销售员添加成功', 'success');
-        }
-
-        function deleteStaff(index) {
-            if (!checkAdminPermission()) return;
-            if (confirm('确定删除？')) {
-                appData.staffList.splice(index, 1);
-                localStorage.setItem('staffList', JSON.stringify(appData.staffList));
-                loadStaffOptions();
-                renderStaffList();
-                showNotification('已删除', 'success');
-            }
-        }
-
-        function addPacker() {
-            if (!checkAdminPermission()) return;
-            const name = document.getElementById('newPackerName').value.trim();
-            if (!name) { showNotification('请输入包装员姓名', 'error'); return; }
-            if (appData.packerList.includes(name)) { showNotification('该包装员已存在', 'error'); return; }
-            appData.packerList.push(name);
-            localStorage.setItem('packerList', JSON.stringify(appData.packerList));
-            document.getElementById('newPackerName').value = '';
-            loadPackerOptions();
-            renderPackerList();
-            showNotification('包装员添加成功', 'success');
-        }
-
-        function deletePacker(index) {
-            if (!checkAdminPermission()) return;
-            if (confirm('确定删除？')) {
-                appData.packerList.splice(index, 1);
-                localStorage.setItem('packerList', JSON.stringify(appData.packerList));
-                loadPackerOptions();
-                renderPackerList();
-                showNotification('已删除', 'success');
-            }
+            select.value = selected;
+            if (select.value !== selected) { invalidateLabel(); validateForm(); }
         }
 
         function switchManagementTab(tabName) {
@@ -1747,7 +1656,9 @@
                             }, 600);
                         };
                     <\/script>
-                </body>
+                    <script src="personnel-config.js"></script>
+    <script src="personnel-client.js"></script>
+</body>
                 </html>
             `);
             printWindow.document.close();
