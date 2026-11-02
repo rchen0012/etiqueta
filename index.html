@@ -1036,7 +1036,7 @@
           <div class="custom-layout">
             <div class="custom-panel">
               <h2>自定义标签</h2>
-              <label for="customOrder">单号</label><input id="customOrder" placeholder="输入订单号" maxlength="60" oninput="updateCustomPreview()">
+              <label for="customOrder">单号（8位数字）</label><input id="customOrder" placeholder="输入8位数字订单号" maxlength="8" inputmode="numeric" pattern="[0-9]{8}" oninput="updateCustomPreview()">
               <label for="customCustomer">客户信息</label><textarea id="customCustomer" placeholder="输入客户姓名或相关信息" oninput="updateCustomPreview()"></textarea>
               <label for="customBoxes">总箱数</label><input id="customBoxes" type="number" min="1" step="1" value="1" oninput="updateCustomPreview()">
               <div class="custom-actions"><button type="button" onclick="printCustomLabel()">打印标签</button><button type="button" onclick="clearCustomLabel()" style="background:#e9ecef;color:#333">清空</button></div>
@@ -1241,6 +1241,7 @@
             ['departmentToolbar', 'departmentWorkspace', 'workspaceTabs'].forEach(id => document.getElementById(id).hidden = false);
             switchTab('create');
             document.title = name + ' · 面单打印';
+            validateOrderNo();
             document.getElementById('orderNo').focus();
             window.scrollTo(0, 0);
         }
@@ -1286,6 +1287,7 @@
         }
         function printCustomLabel() {
             const order=document.getElementById('customOrder').value.trim();
+            if (!/^\d{8}$/.test(order)) { alert('自定义订单号必须为8位数字'); document.getElementById('customOrder').focus(); return; }
             const customer=document.getElementById('customCustomer').value.trim();
             const boxes=Number(document.getElementById('customBoxes').value);
             if (!order || !customer || !Number.isInteger(boxes) || boxes<1) { alert('请填写单号、客户信息和有效的总箱数'); return; }
@@ -1492,12 +1494,18 @@
         }
 
         // ======================== 表单验证 ========================
+        function isDepartmentOrderValid(orderNo) {
+            const suffix = selectedDepartment === 'DAFU SHOP' ? '1' : selectedDepartment === 'DAFU BEUATY' ? '4' : '';
+            return !!suffix && /^\d{8}$/.test(orderNo) && orderNo.endsWith(suffix);
+        }
         function validateOrderNo() {
             const input = document.getElementById('orderNo');
             const err = document.getElementById('orderNoError');
             const val = input.value.replace(/[^0-9]/g, '');
             input.value = val;
-            if (val.length > 0 && val.length !== 8) {
+            err.textContent = selectedDepartment === 'DAFU SHOP' ? '订单号必须为8位数字，并以1结尾' : '订单号必须为8位数字，并以4结尾';
+            input.placeholder = selectedDepartment === 'DAFU SHOP' ? '8位数字，以1结尾' : '8位数字，以4结尾';
+            if (val.length > 0 && !isDepartmentOrderValid(val)) {
                 input.classList.add('error');
                 err.style.display = 'block';
             } else {
@@ -1514,7 +1522,7 @@
             const packer = document.getElementById('packer').value;
             const quantity = parseInt(document.getElementById('quantity').value) || 0;
             const unit = document.getElementById('unit').value;
-            const valid = departments.includes(selectedDepartment) && /^\d{8}$/.test(orderNo) && customer.trim() && staff && packer && quantity > 0 && unit;
+            const valid = departments.includes(selectedDepartment) && isDepartmentOrderValid(orderNo) && customer.trim() && staff && packer && quantity > 0 && unit;
             if (appData.generatedLabel && !isLabelReady()) invalidateLabel();
             document.getElementById('printBtn').disabled = !isLabelReady();
             document.getElementById('generateBtn').disabled = !valid || appData.isGenerating;
