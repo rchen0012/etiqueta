@@ -1,6 +1,9 @@
 /* Google Sheets is authoritative. Local storage is only a read-only offline cache. */
 (() => {
   const config = window.PERSONNEL_CONFIG || {};
+  let activeStore = '', epoch = 0;
+  const cacheKey = (store, kind) => 'dafu:' + store + ':' + kind;
+  const storeName = () => activeStore === 'beauty' ? 'DAFU BEUATY' : 'DAFU SHOP';
   let channel, peer, peerOrigin, readyPromise, token = '', sequence = 0;
   let people = [], revision = -1, latestApplied = 0, busy = false, refreshing = false;
   const pending = new Map();
@@ -48,7 +51,8 @@
     if (data.error) item.reject(new Error(data.error));
     else item.resolve(data.result);
   });
-  async function rpc(method, args = []) {
+  async function rpc(method, args = [], store = activeStore) {
+    if (!store) throw new Error("请先选择部门。");
     await connect();
     return new Promise((resolve, reject) => {
       const id = String(++sequence);
@@ -57,10 +61,12 @@
         reject(new Error('服务器响应超时，保存结果尚未确认。请刷新名单核对后再操作。'));
       }, 30000);
       pending.set(id, {resolve, reject, timeout});
-      peer.postMessage({channel, id, method, args}, peerOrigin);
+      peer.postMessage({channel, id, method, args: [...args, store]}, peerOrigin);
     });
   }
-  function applySnapshot(data, requestNumber) {
+  function applySnapshot(data, requestNumber, store = activeStore, requestEpoch = epoch) {
+    if (!activeStore || store !== activeStore || requestEpoch !== epoch) return;
+    if (!data || data.store !== activeStore) throw new Error("后台部门校验失败，已阻止加载其他部门的人员名单。");
     if (!data || !Number.isFinite(data.revision) || !Array.isArray(data.people) || data.people.some(p => !p || typeof p.id !== 'string' || typeof p.name !== 'string' || !['staff', 'packer'].includes(p.role))) throw new Error('服务器返回的人员名单格式无效。');
     if (data.revision < revision || (data.revision === revision && requestNumber < latestApplied)) return;
     revision = data.revision;
@@ -69,25 +75,25 @@
     appData.staffList = people.filter(p => p.role === 'staff').map(p => p.name);
     appData.packerList = people.filter(p => p.role === 'packer').map(p => p.name);
     try {
-      localStorage.setItem('staffList', JSON.stringify(appData.staffList));
-      localStorage.setItem('packerList', JSON.stringify(appData.packerList));
+      localStorage.setItem(cacheKey(activeStore, 'staffList'), JSON.stringify(appData.staffList));
+      localStorage.setItem(cacheKey(activeStore, 'packerList'), JSON.stringify(appData.packerList));
     } catch { /* A blocked cache must not turn a successful server write into failure. */ }
     loadStaffOptions();
     loadPackerOptions();
     renderStaffList();
     renderPackerList();
     validateForm();
-    status('已同步 Google Sheets · ' + new Date().toLocaleTimeString());
+    status(storeName() + ' · 已同步独立人员数据库 · ' + new Date().toLocaleTimeString());
   }
   let requestNumber = 0;
   window.refreshPersonnel = async function() {
-    if (refreshing || busy) return;
+    if (!activeStore || refreshing || busy) return;
     refreshing = true;
-    const number = ++requestNumber;
+    const number = ++requestNumber, store = activeStore, requestEpoch = epoch;
     try {
-      applySnapshot(await rpc('personnelList'), number);
-    } catch (error) { status(error.message + ' 当前名单可能不是最新。'); }
-    finally { refreshing = false; }
+      applySnapshot(await rpc('personnelList', [], store), number, store, requestEpoch);
+    } catch (error) { if (requestEpoch === epoch) status(storeName() + ' · ' + error.message + ' 当前名单可能不是最新。'); }
+    finally { if (requestEpoch === epoch) refreshing = false; }
   };
   function render(role, targetId) {
     const container = document.getElementById(targetId);
@@ -119,13 +125,15 @@
   async function mutate(method, args) {
     if (!checkAdminPermission() || !token || busy) return false;
     setBusy(true);
-    const number = ++requestNumber;
+    const number = ++requestNumber, store = activeStore, requestEpoch = epoch;
     try {
-      const result = await rpc(method, [token, ...args]);
-      applySnapshot(result, number);
-      showNotification('已保存到 Google Sheets', 'success');
+      const result = await rpc(method, [token, ...args], store);
+      if (requestEpoch !== epoch || store !== activeStore) return false;
+      applySnapshot(result, number, store, requestEpoch);
+      showNotification('已保存到 ' + storeName() + ' 独立数据库', 'success');
       return true;
     } catch (error) {
+      if (requestEpoch !== epoch) return false;
       status(error.message);
       showNotification(error.message, 'error');
       if (error.message.includes('登录')) {
@@ -135,7 +143,7 @@
         document.getElementById('managementContent').style.display = 'none';
       }
       return false;
-    } finally { setBusy(false); }
+    } finally { if (requestEpoch === epoch) setBusy(false); }
   }
   async function add(role, inputId) {
     const input = document.getElementById(inputId);
@@ -155,12 +163,14 @@
   window.adminLogin = async function() {
     if (loggingIn) return;
     loggingIn = true;
+    const store = activeStore, requestEpoch = epoch;
     const input = document.getElementById('adminPassword');
     const password = input.value;
     const username = document.getElementById('adminUsername').value.trim();
     input.value = '';
     try {
-      const result = await rpc('personnelLogin', [username, password]);
+      const result = await rpc('personnelLogin', [username, password], store);
+      if (requestEpoch !== epoch || store !== activeStore) return;
       if (!result || typeof result.token !== 'string' || !result.token) throw new Error('登录失败。');
       token = result.token;
       appData.isAdminLoggedIn = true;
@@ -170,15 +180,46 @@
       await refreshPersonnel();
       showNotification('管理员登录成功', 'success');
     } catch (error) {
+      if (requestEpoch !== epoch) return;
       token = '';
       appData.isAdminLoggedIn = false;
       const message = document.getElementById('loginError');
       message.textContent = error.message;
       message.style.display = 'block';
-    } finally { loggingIn = false; }
+    } finally { if (requestEpoch === epoch) loggingIn = false; }
   };
+  function cachedList(store, kind) {
+    if (!store) return [];
+    try {
+      let raw = localStorage.getItem(cacheKey(store, kind));
+      // Legacy data belonged to SHOP. It must never become BEUATY's starting list.
+      if (raw === null && store === 'shop') raw = localStorage.getItem(kind);
+      const list = JSON.parse(raw || '[]');
+      return Array.isArray(list) ? list.filter(x => typeof x === 'string') : [];
+    } catch { return []; }
+  }
+  function changeDepartment(name) {
+    const next = name === 'DAFU SHOP' ? 'shop' : name === 'DAFU BEUATY' ? 'beauty' : '';
+    if (next === activeStore) return;
+    activeStore = next; epoch++; token = ''; revision = -1; latestApplied = 0;
+    people = []; busy = false; refreshing = false; loggingIn = false;
+    appData.isAdminLoggedIn = false;
+    appData.staffList = cachedList(next, 'staffList');
+    appData.packerList = cachedList(next, 'packerList');
+    document.getElementById('adminPassword').value = '';
+    document.getElementById('adminUsername').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('managementContent').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+    document.querySelectorAll('.add-person-form button').forEach(button => { button.disabled = false; });
+    loadStaffOptions(); loadPackerOptions(); renderStaffList(); renderPackerList();
+    resetForm();
+    status(next ? storeName() + ' · 正在连接独立人员数据库…' : '请选择部门');
+    if (next) refreshPersonnel();
+  }
+  window.addEventListener('departmentchange', event => changeDepartment(event.detail));
   document.addEventListener('DOMContentLoaded', () => {
-    refreshPersonnel();
+    changeDepartment(typeof selectedDepartment === 'string' ? selectedDepartment : '');
     setInterval(() => { if (!document.hidden) refreshPersonnel(); }, 30000);
     window.addEventListener('focus', () => refreshPersonnel());
   });

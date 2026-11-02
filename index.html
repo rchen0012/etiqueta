@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大福面单打印 · Google Sheets 人员管理</title>
+    <title>DAFU · 选择部门</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <script>
         // CDN 兜底：jsdelivr 失败时切换 unpkg
@@ -888,28 +888,166 @@
                 opacity: 0;
             }
         }
+
+        [hidden] { display: none !important; }
+        .department-home { padding: 64px 40px 80px; background: radial-gradient(ellipse at top, #e8f9f7, #fff 70%); min-height: 70vh; }
+        .department-home-logo { display:block; width:480px; max-width:100%; height:auto; max-height:none; object-fit:contain; margin:0 auto 22px; }
+        .department-intro { text-align: center; max-width: 560px; margin: 0 auto 36px; }
+        .department-eyebrow { color: #008e9b; font-size: 13px; font-weight: 700; letter-spacing: 3px; margin-bottom: 16px; }
+        .department-intro h2 { color: #183b40; font-size: clamp(26px, 4vw, 36px); margin-bottom: 14px; }
+        .department-intro p { color: #687d80; line-height: 1.8; }
+        .department-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; max-width: 820px; margin: auto; }
+        .department-card { text-align: left; font: inherit; cursor: pointer; border: 1px solid #d9eae8; border-radius: 18px; padding: 32px; background: #fff; color: #183b40; box-shadow: 0 8px 28px #164d4510; transition: transform .2s, box-shadow .2s; }
+        .department-card:hover { transform: translateY(-5px); box-shadow: 0 16px 32px #164d4520; border-color: #0abab5; }
+        .department-card:focus-visible, .department-switch:focus-visible { outline: 3px solid #008e9b; outline-offset: 4px; }
+        .department-icon { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 16px; color: #008e9b; background: #e5f8f6; margin-bottom: 28px; }
+        .department-card.beauty .department-icon { background: #fff0f4; color: #b35e80; }
+        .department-card h3 { font-size: 24px; letter-spacing: .5px; margin-bottom: 12px; }
+        .department-card p { color: #748386; font-size: 14px; line-height: 1.8; }
+        .department-enter { display: block; color: #008e9b; font-weight: 600; margin-top: 30px; }
+        .department-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 30px; background: #f0faf9; border-bottom: 1px solid #d9eae8; }
+        .department-toolbar strong { color: #007f89; }
+        .department-switch { border: 1px solid #c1dedb; background: white; color: #007f89; border-radius: 8px; padding: 9px 14px; cursor: pointer; font: inherit; font-size: 14px; }
+        button.nav-tab { border: 0; font: inherit; font-size: 14px; }
+        @media (max-width: 768px) { .header { flex-wrap: wrap; gap: 20px; padding: 20px; } .nav-tabs { flex-wrap: wrap; } .department-home { padding: 40px 20px; } .department-grid { grid-template-columns: 1fr; } .department-card { padding: 26px; } .department-toolbar { padding: 14px 20px; flex-wrap: wrap; } }
+
+
+        /* DAFU SHOP 专属薄荷绿主题；DAFU BEUATY 粉色保持不变 */
+        body.shop-theme { background: linear-gradient(135deg, #A4E5E0 0%, #7ccfc9 100%); }
+        body.shop-theme .logo h1, body.shop-theme .quantity-btn,
+        body.shop-theme .preview-logo1-text, body.shop-theme .page-nav button,
+        body.shop-theme .print-progress { color: #267d79; }
+        body.shop-theme .nav-tab.active, body.shop-theme .btn-primary,
+        body.shop-theme .management-tab.active, body.shop-theme .login-btn { background: #A4E5E0; color: #174d4a; }
+        body.shop-theme .btn-primary:hover:not(:disabled), body.shop-theme .login-btn:hover { background: #7ccfc9; }
+        body.shop-theme .section-title::before, body.shop-theme .page-nav button:hover { background: #A4E5E0; }
+        body.shop-theme input:focus, body.shop-theme select:focus,
+        body.shop-theme .login-input:focus { border-color: #A4E5E0; box-shadow: 0 0 0 3px rgba(164,229,224,.3); }
+        body.shop-theme .quantity-input:focus { box-shadow: inset 0 0 0 2px #A4E5E0; }
+        body.shop-theme .page-nav button, body.shop-theme .print-progress { border-color: #A4E5E0; }
+        body.shop-theme .history-card { border-left-color: #A4E5E0; }
+        body.shop-theme .department-toolbar { background: #ecfaf8; border-bottom-color: #c8eae7; }
+        body.shop-theme .department-toolbar strong, body.shop-theme .department-switch { color: #267d79; }
+        body.shop-theme .department-switch { border-color: #A4E5E0; }
+        .department-card:not(.beauty):hover { border-color: #A4E5E0; }
+        .department-card:not(.beauty) .department-icon { background: #A4E5E0; color: #267d79; }
+        .department-card:not(.beauty) .department-enter { color: #267d79; }
+
+        /* DAFU BEUATY 专属粉色主题 */
+        body.beauty-theme { background: linear-gradient(135deg, #FEC6C7 0%, #f3a4ae 100%); }
+        body.beauty-theme .logo h1, body.beauty-theme .quantity-btn,
+        body.beauty-theme .preview-logo1-text, body.beauty-theme .page-nav button,
+        body.beauty-theme .print-progress { color: #a33e55; }
+        body.beauty-theme .nav-tab.active, body.beauty-theme .btn-primary,
+        body.beauty-theme .management-tab.active, body.beauty-theme .login-btn { background: #FEC6C7; color: #4a2730; }
+        body.beauty-theme .btn-primary:hover:not(:disabled), body.beauty-theme .login-btn:hover { background: #f3a4ae; }
+        body.beauty-theme .section-title::before, body.beauty-theme .page-nav button:hover { background: #FEC6C7; }
+        body.beauty-theme input:focus, body.beauty-theme select:focus,
+        body.beauty-theme .login-input:focus { border-color: #FEC6C7; box-shadow: 0 0 0 3px rgba(254,198,199,.25); }
+        body.beauty-theme .quantity-input:focus { box-shadow: inset 0 0 0 2px #FEC6C7; }
+        body.beauty-theme .page-nav button, body.beauty-theme .print-progress { border-color: #FEC6C7; }
+        body.beauty-theme .history-card { border-left-color: #FEC6C7; }
+        body.beauty-theme .department-toolbar { background: #fff1f2; border-bottom-color: #f7d5d8; }
+        body.beauty-theme .department-toolbar strong, body.beauty-theme .department-switch { color: #a33e55; }
+        body.beauty-theme .department-switch { border-color: #FEC6C7; }
+        .department-card.beauty:hover { border-color: #FEC6C7; }
+        .department-card.beauty .department-icon { background: #FEC6C7; color: #a33e55; }
+        .department-card.beauty .department-enter { color: #a33e55; }
+
+        .home-header-brand { display:flex; align-items:center; justify-content:flex-end; margin-left:auto; min-width:130px; }
+        .home-header-brand img { max-width:180px; max-height:66px; width:auto; height:auto; object-fit:contain; }
+        .home-header-brand strong { color:#008e9b; font-size:16px; }
+        @media(max-width:768px) { .home-header-brand { min-width:0; } .home-header-brand img { max-width:125px; max-height:48px; } }
+        /* 部门导航 Logo 尺寸优化：宽屏清晰、手机端自适应 */
+        .department-card .department-icon { width: 132px; height: 96px; margin-bottom: 18px; border-radius: 12px; background: transparent !important; display: flex; align-items: center; justify-content: flex-start; overflow: hidden; }
+        .department-card .department-icon img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: left center; }
+        .department-card .department-icon svg { width: 54px; height: 54px; flex-shrink: 0; }
+        .department-card .department-icon img + svg { display: none; }
+        @media (max-width: 768px) { .department-card .department-icon { width: 112px; height: 80px; margin-bottom: 14px; } }
+        /* BEUATY Logo 保持较大高度，同时限制宽度以避开右侧二维码；SHOP 保持原尺寸 */
+        body.beauty-theme .label-preview .preview-logo1 { height: 54px; max-width: 145px; width: auto; object-fit: contain; }
+        @media print {
+            body.beauty-theme .label-preview .preview-logo1 { height: 18mm !important; max-width: 43mm; width: auto; }
+        }
+        /* 首页隐藏顶部品牌区，部门工作台恢复显示 */
+        body:not(.shop-theme):not(.beauty-theme) #headerLogo,
+        body:not(.shop-theme):not(.beauty-theme) #homeHeaderBrand { display: none !important; }
+        .department-grid { grid-template-columns: repeat(3,minmax(0,1fr)); max-width: 1100px; }
+        .department-card.custom .department-icon { color:#5b7898; }
+        .custom-workspace { padding: 30px; background: #f8fbfb; }
+        .custom-layout { display:grid; grid-template-columns: minmax(0,1fr) minmax(280px,400px); gap:28px; }
+        .custom-panel { background:#fff; border:1px solid #dce9e8; border-radius:14px; padding:26px; }
+        .custom-panel h2 { margin-bottom:22px; font-size:21px; }
+        .custom-panel label { display:block; margin:15px 0 7px; }
+        .custom-panel input,.custom-panel textarea { width:100%; padding:12px; border:1px solid #cadad9; border-radius:8px; font:inherit; }
+        .custom-panel textarea { min-height:100px; resize:vertical; }
+        .custom-preview { background:white; width:100%; max-width:300px; aspect-ratio:2/3; border:2px solid #222; padding:22px; margin: 0 auto; overflow-wrap:anywhere; }
+        .custom-preview .custom-order { font-size:26px; font-weight:800; margin:22px 0; }
+        .custom-preview .custom-customer { white-space:pre-wrap; margin-top:18px; font-size:17px; }
+        .custom-preview .custom-total { font-size:40px; font-weight:800; margin-top:25px; }
+        .custom-actions { display:flex; gap:12px; margin-top:22px; }
+        .custom-actions button { padding:12px 20px; border:0; border-radius:8px; background:#0abab5; color:white; font-weight:700; cursor:pointer; }
+        @media(max-width:850px) { .department-grid { grid-template-columns:1fr; } .custom-layout { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
     <div class="app-container">
         <!-- 头部导航 -->
-        <div class="header">
-            <div class="logo">
-                <img src="images/form-logonova.png" alt="dafu pano Logo" class="logo-image" onerror="this.style.display='none'">
+        <div class="header" id="mainHeader">
+            <div class="logo" id="headerLogo">
+                <img id="workspaceHeaderLogoImage" src="images/form-logonova.png" alt="DAFU SHOP Logo" class="logo-image" onerror="this.style.display='none'">
                 <div class="logo-text">
                     <h1>面单打印小程序</h1>
                     <div class="subtitle">DAFU Label Printing System</div>
                 </div>
             </div>
-            <div class="nav-tabs">
-                <div class="nav-tab active" onclick="switchTab('create')">ETIQUETA</div>
-                <div class="nav-tab" onclick="switchTab('history')">História</div>
-                <div class="nav-tab" onclick="switchTab('management')">人员管理</div>
+            <div class="home-header-brand" id="homeHeaderBrand" hidden><img src="images/form-logonova1.png" alt="DAFU 品牌 Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><strong style="display:none">DAFU WORKSPACE</strong></div>
+            <div class="nav-tabs" id="workspaceTabs" hidden>
+                <button type="button" class="nav-tab active" data-tab="create" onclick="switchTab('create')">ETIQUETA</button>
+                <button type="button" class="nav-tab" data-tab="history" onclick="switchTab('history')">História</button>
+                <button type="button" class="nav-tab" data-tab="management" onclick="switchTab('management')">人员管理</button>
             </div>
         </div>
 
+
+        <section class="department-home" id="departmentHome" aria-labelledby="departmentTitle">
+            <div class="department-intro"><img class="department-home-logo" src="images/form-logonova1.png" alt="DAFU Logo" onerror="this.style.display='none'"><div class="department-eyebrow">DAFU WORKSPACE</div><h2 id="departmentTitle" tabindex="-1">选择部门</h2><p>请选择你要进入的部门，开始面单打印与日常工作。</p></div>
+            <div class="department-grid">
+                <button type="button" class="department-card" onclick="selectDepartment('DAFU SHOP')">
+                    <span class="department-icon" aria-hidden="true"><img src="images/form-logoshop.png" alt="dafu pano Logo" class="department-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9h16l-2-5H6L4 9Z M5 9v11h14V9 M9 20v-7h6v7 M3 9v2a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0V9"/></svg></span>
+                    <h3>DAFU SHOP</h3><p>进入部门工作台</p><span class="department-enter">进入部门 <span aria-hidden="true">→</span></span>
+                </button>
+                <button type="button" class="department-card beauty" onclick="selectDepartment('DAFU BEUATY')">
+                    <span class="department-icon" aria-hidden="true"><img src="images/form-logobeauty.png" alt="dafu pano Logo" class="department-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg width="54" height="54" viewBox="0 0 64 64" fill="none" stroke="#a33e55" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Beauty 美妆图标"><path d="M13 53h38"/><rect x="17" y="29" width="15" height="24" rx="3" fill="#FEC6C7"/><path d="M20 29v-9h9v9M21 20v-9l7-5v14" fill="#f3a4ae"/><rect x="38" y="25" width="12" height="28" rx="3" fill="#FEC6C7"/><path d="M40 25v-8h8v8M39 17h10"/><path d="M24 38v7M44 34v9"/></svg></span>
+                    <h3>DAFU Beuaty</h3><p>进入部门工作台</p><span class="department-enter">进入部门 <span aria-hidden="true">→</span></span>
+                </button>
+                <button type="button" class="department-card custom" onclick="openCustomLabel()">
+                    <span class="department-icon" aria-hidden="true"><svg viewBox="0 0 64 64" width="54" height="54" fill="none" stroke="currentColor" stroke-width="3"><rect x="12" y="6" width="40" height="52" rx="5"/><path d="M21 20h22M21 30h22M21 40h14"/></svg></span>
+                    <h3>自定义标签</h3><p>单号 · 客户信息 · 总箱数</p><span class="department-enter">进入模块 →</span>
+                </button>
+            </div>
+        </section>
+        <div class="department-toolbar" id="departmentToolbar" hidden>
+            <span>当前部门：<strong id="currentDepartment" aria-live="polite"></strong></span>
+            <button type="button" class="department-switch" onclick="showDepartmentHome()">← 切换部门</button>
+        </div>
+
+        <section class="custom-workspace" id="customWorkspace" hidden>
+          <div class="custom-layout">
+            <div class="custom-panel">
+              <h2>自定义标签</h2>
+              <label for="customOrder">单号</label><input id="customOrder" placeholder="输入订单号" maxlength="60" oninput="updateCustomPreview()">
+              <label for="customCustomer">客户信息</label><textarea id="customCustomer" placeholder="输入客户姓名或相关信息" oninput="updateCustomPreview()"></textarea>
+              <label for="customBoxes">总箱数</label><input id="customBoxes" type="number" min="1" step="1" value="1" oninput="updateCustomPreview()">
+              <div class="custom-actions"><button type="button" onclick="printCustomLabel()">打印标签</button><button type="button" onclick="clearCustomLabel()" style="background:#e9ecef;color:#333">清空</button></div>
+            </div>
+            <div class="custom-panel"><h2>标签预览（100 × 150 mm）</h2>
+              <div class="custom-preview" id="customPreview"><div style="font-size:15px;font-weight:700">DAFU · 自定义标签</div><div class="custom-order">单号：<span id="customPreviewOrder">—</span></div><hr><div class="custom-customer">客户信息：<span id="customPreviewCustomer">—</span></div><hr style="margin-top:22px"><div class="custom-total">总箱数：<span id="customPreviewBoxes">1</span></div></div>
+            </div>
+          </div>
+        </section>
         <!-- 主要内容 -->
-        <div class="main-content">
+        <div class="main-content" id="departmentWorkspace" hidden>
             <!-- 左侧表单 -->
             <div class="form-section">
                 <div class="section-title">Informação（订单信息）</div>
@@ -1068,11 +1206,101 @@
     </div>
 
     <script>
+
+        // 两个部门使用独立人员数据库；禁止把旧缓存复制到 BEUATY。
+        const departments = ['DAFU SHOP', 'DAFU BEUATY'];
+        let selectedDepartment = '';
+        function labelLogoSource() { return selectedDepartment === 'DAFU BEUATY' ? 'images/preview-logo2.png' : 'images/preview-logo1.png'; }
+        function updateDepartmentLabelLogo() {
+            const img = document.querySelector('.label-preview .preview-logo1');
+            const txt = document.querySelector('.label-preview .preview-logo1-text');
+            if (img) { img.style.display = 'block'; img.src = labelLogoSource(); img.alt = selectedDepartment + ' Logo'; }
+            if (txt) { txt.style.display = 'none'; txt.textContent = selectedDepartment || 'DAFU ETIQUETA'; }
+        }
+        function updateWorkspaceHeaderLogo(name) {
+            const img = document.getElementById('workspaceHeaderLogoImage');
+            if (!img) return;
+            const isBeauty = name === 'DAFU BEUATY';
+            img.style.display = 'block';
+            img.src = isBeauty ? 'images/form-logonail.png' : 'images/form-logonova.png';
+            img.alt = isBeauty ? 'DAFU BEUATY Logo' : 'DAFU SHOP Logo';
+        }
+        function selectDepartment(name) {
+            if (!departments.includes(name)) return;
+            selectedDepartment = name;
+            window.dispatchEvent(new CustomEvent('departmentchange', {detail: name}));
+            updateDepartmentLabelLogo();
+            updateWorkspaceHeaderLogo(name);
+            document.body.classList.toggle('beauty-theme', name === 'DAFU BEUATY');
+            document.body.classList.toggle('shop-theme', name === 'DAFU SHOP');
+            document.getElementById('currentDepartment').textContent = name;
+            document.getElementById('homeHeaderBrand').hidden = true;
+            document.getElementById('headerLogo').hidden = false;
+            document.getElementById('customWorkspace').hidden = true;
+            document.getElementById('departmentHome').hidden = true;
+            ['departmentToolbar', 'departmentWorkspace', 'workspaceTabs'].forEach(id => document.getElementById(id).hidden = false);
+            switchTab('create');
+            document.title = name + ' · 面单打印';
+            document.getElementById('orderNo').focus();
+            window.scrollTo(0, 0);
+        }
+        function showDepartmentHome() {
+            selectedDepartment = '';
+            window.dispatchEvent(new CustomEvent('departmentchange', {detail: ''}));
+            document.body.classList.remove('beauty-theme', 'shop-theme');
+            document.getElementById('customWorkspace').hidden = true;
+            document.getElementById('departmentHome').hidden = false;
+            document.getElementById('homeHeaderBrand').hidden = true;
+            document.getElementById('headerLogo').hidden = true;
+            ['departmentToolbar', 'departmentWorkspace', 'workspaceTabs'].forEach(id => document.getElementById(id).hidden = true);
+            appData.isAdminLoggedIn = false;
+            document.getElementById('adminPassword').value = '';
+            document.title = 'DAFU · 选择部门';
+            document.getElementById('departmentTitle').focus();
+            window.scrollTo(0, 0);
+        }
+
+        function openCustomLabel() {
+            selectedDepartment = '自定义标签';
+            window.dispatchEvent(new CustomEvent('departmentchange', {detail: ''}));
+            updateWorkspaceHeaderLogo('DAFU SHOP');
+            document.body.classList.remove('shop-theme','beauty-theme');
+            document.getElementById('departmentHome').hidden = true;
+            document.getElementById('headerLogo').hidden = false;
+            document.getElementById('homeHeaderBrand').hidden = true;
+            document.getElementById('departmentToolbar').hidden = false;
+            document.getElementById('currentDepartment').textContent = '自定义标签';
+            document.getElementById('departmentWorkspace').hidden = true;
+            document.getElementById('workspaceTabs').hidden = true;
+            document.getElementById('customWorkspace').hidden = false;
+            document.title = 'DAFU · 自定义标签';
+            updateCustomPreview(); window.scrollTo(0,0);
+        }
+        function updateCustomPreview() {
+            document.getElementById('customPreviewOrder').textContent = document.getElementById('customOrder').value.trim() || '—';
+            document.getElementById('customPreviewCustomer').textContent = document.getElementById('customCustomer').value.trim() || '—';
+            document.getElementById('customPreviewBoxes').textContent = document.getElementById('customBoxes').value || '—';
+        }
+        function clearCustomLabel() {
+            document.getElementById('customOrder').value=''; document.getElementById('customCustomer').value=''; document.getElementById('customBoxes').value='1'; updateCustomPreview();
+        }
+        function printCustomLabel() {
+            const order=document.getElementById('customOrder').value.trim();
+            const customer=document.getElementById('customCustomer').value.trim();
+            const boxes=Number(document.getElementById('customBoxes').value);
+            if (!order || !customer || !Number.isInteger(boxes) || boxes<1) { alert('请填写单号、客户信息和有效的总箱数'); return; }
+            const safe = x => String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            const popup=window.open('','_blank');
+            if (!popup) { alert('浏览器阻止了打印窗口，请允许弹出窗口后重试'); return; }
+            popup.document.write(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>自定义标签</title><style>@page{size:100mm 150mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#111}.label{width:100mm;height:150mm;border:1px solid #111;padding:8mm;overflow-wrap:anywhere}.brand{font-size:17pt;font-weight:700}.order{font-size:24pt;font-weight:800;margin:12mm 0 7mm}.customer{font-size:17pt;white-space:pre-wrap;margin:7mm 0;min-height:25mm}.boxes{font-size:30pt;font-weight:800;margin-top:12mm}hr{border:0;border-top:1px dashed #888}</style></head><body><div class="label"><div class="brand">DAFU · 自定义标签</div><div class="order">单号：${safe(order)}</div><hr><div class="customer">客户信息：${safe(customer)}</div><hr><div class="boxes">总箱数：${boxes}</div></div><script>window.onload=()=>{window.print()}<\/script></body></html>`);
+            popup.document.close();
+        }
+
         // ======================== 全局数据 ========================
         const appData = {
             labelHistory: JSON.parse(localStorage.getItem('labelHistory')) || [],
-            staffList: JSON.parse(localStorage.getItem('staffList')) || ['DAFU'],
-            packerList: JSON.parse(localStorage.getItem('packerList')) || ['DAFU'],
+            staffList: [],
+            packerList: [],
             isAdminLoggedIn: false,
             currentQRCodeDataURL: null,
             currentPage: 1,
@@ -1086,10 +1314,10 @@
 
         const labelFields = ['orderNo', 'customer', 'staff', 'packer', 'quantity', 'unit', 'weight'];
         function readLabelFields() {
-            return Object.fromEntries(labelFields.map(id => [id, document.getElementById(id).value]));
+            return {department: selectedDepartment, ...Object.fromEntries(labelFields.map(id => [id, document.getElementById(id).value]))};
         }
         function labelSignature(data) {
-            return JSON.stringify(labelFields.map(id => data[id]));
+            return JSON.stringify([data.department, ...labelFields.map(id => data[id])]);
         }
         function invalidateLabel() {
             appData.generationVersion++;
@@ -1286,7 +1514,7 @@
             const packer = document.getElementById('packer').value;
             const quantity = parseInt(document.getElementById('quantity').value) || 0;
             const unit = document.getElementById('unit').value;
-            const valid = /^\d{8}$/.test(orderNo) && customer.trim() && staff && packer && quantity > 0 && unit;
+            const valid = departments.includes(selectedDepartment) && /^\d{8}$/.test(orderNo) && customer.trim() && staff && packer && quantity > 0 && unit;
             if (appData.generatedLabel && !isLabelReady()) invalidateLabel();
             document.getElementById('printBtn').disabled = !isLabelReady();
             document.getElementById('generateBtn').disabled = !valid || appData.isGenerating;
@@ -1483,8 +1711,8 @@
                 labelsHTML.push(`
                     <div class="label-preview">
                         <div class="preview-logo1-container">
-                            <img src="images/preview-logo1.png" alt="DAFU Logo" class="preview-logo1" onerror="this.style.display='none'; this.parentElement.querySelector('.preview-logo1-text').style.display='block'">
-                            <div class="preview-logo1-text" style="display:none;">DAFU ETIQUETA</div>
+                            <img src="${labelLogoSource()}" alt="${escapeHTML(selectedDepartment)} Logo" class="preview-logo1" onerror="this.style.display='none'; this.parentElement.querySelector('.preview-logo1-text').style.display='block'">
+                            <div class="preview-logo1-text" style="display:none;">${escapeHTML(selectedDepartment)}</div>
                         </div>
                         <div class="preview-total-boxes">${totalBoxes}</div>
                         <div class="preview-qrcode">
@@ -1549,7 +1777,8 @@
                             position: absolute;
                             top: 7.3mm;
                             left: 7.3mm;
-                            height: 12.7mm;
+                            height: ${selectedDepartment === 'DAFU BEUATY' ? '18mm' : '12.7mm'};
+                            max-width: ${selectedDepartment === 'DAFU BEUATY' ? '43mm' : 'none'};
                             width: auto;
                             object-fit: contain;
                         }
